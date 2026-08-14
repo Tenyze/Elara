@@ -1,0 +1,45 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IDE - VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Build artifacts leaked to root
+mixins.*.refmap.json
+
+# Logs
+ingamelogs/
+*.log
+logs/
+
+# Runtime
+run/
+
+# Local scripts (machine-specific paths / credentials)
+client.run.bat
+
+# Keystores / secrets
+*.jks
+*.keystore

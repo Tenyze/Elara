@@ -1,0 +1,14 @@
+[{
+  "modid": "elara",
+  "name": "Elara Client",
+  "description": "A modern Hack client built on OneConfig",
+  "version": "Pre-6.x",
+  "mcversion": "1.8.9",
+  "url": "",
+  "updateUrl": "",
+  "authors": ["Tenyze"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}]
