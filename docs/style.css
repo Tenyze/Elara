@@ -328,7 +328,9 @@ h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.08; margin: 0 0 14px; fon
 .themes-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 44px; align-items: start; }
 
 .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-.theme-shots { display: flex; flex-direction: column; gap: 18px; }
+.theme-preview { display: flex; flex-direction: column; gap: 18px; }
+.theme-preview img.fade { animation: fadeIn 0.32s ease; }
+.theme-card.is-editing { border-color: var(--accent); box-shadow: 0 0 22px rgba(59,130,246,0.28); transform: translateY(-2px); }
 .theme-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 14px; text-align: center;

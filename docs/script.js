@@ -213,5 +213,50 @@ const statObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.6 });
 document.querySelectorAll('.stat-num').forEach(el => statObserver.observe(el));
 
+/* ---------------- Theme editor preview ---------------- */
+const themePreviewImg = document.getElementById('themePreviewImg');
+const themePreviewCaption = document.getElementById('themePreviewCaption');
+const themeCards = [...document.querySelectorAll('.theme-card')];
+
+const THEME_VIEWS = {
+  chooser: { src: 'assets/images/themes.png', caption: 'Theme chooser — 8 presets, or create your own.' },
+  editor: { src: 'assets/images/themes-editor.png', caption: 'Theme editor — native colour picker, acrylic glass & live preview.' }
+};
+
+function swapThemePreview(view) {
+  themePreviewImg.src = THEME_VIEWS[view].src;
+  themePreviewCaption.textContent = THEME_VIEWS[view].caption;
+  themePreviewImg.classList.remove('fade');
+  void themePreviewImg.offsetWidth;
+  themePreviewImg.classList.add('fade');
+}
+
+themeCards.forEach(card => {
+  const editBtn = card.querySelector('.theme-actions button');
+  const applyBtn = card.querySelector('.theme-actions button.apply');
+
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      themeCards.forEach(c => c.classList.remove('is-editing'));
+      card.classList.add('is-editing');
+      swapThemePreview('editor');
+    });
+  }
+
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      themeCards.forEach(c => {
+        c.classList.remove('is-active', 'is-editing');
+        const ab = c.querySelector('.theme-actions button.apply');
+        if (ab) { ab.textContent = 'Apply'; ab.classList.remove('active'); }
+      });
+      card.classList.add('is-active');
+      applyBtn.textContent = 'Active';
+      applyBtn.classList.add('active');
+      swapThemePreview('chooser');
+    });
+  }
+});
+
 /* ---------------- Init ---------------- */
 renderModules('combat');
