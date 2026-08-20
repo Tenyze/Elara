@@ -3,514 +3,437 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elara Client — A Powerful Minecraft 1.8.9 PvP Client</title>
-<meta name="description" content="Elara is a modern Minecraft 1.8.9 Forge PvP client built on the OneConfig API. 90+ modules, integrated music player, customisable HUDs and themes.">
-<link rel="icon" type="image/png" href="assets/images/Elara Main.png">
+<title>Elara Client — A minimal Minecraft 1.8.9 PvP Client</title>
+<meta name="description" content="Elara is a minimal Minecraft 1.8.9 Forge PvP client built on a modified OneConfig API. 94 modules, integrated NetEase music player, custom HUDs and themes.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cpath d='M16 6l8 10-8 10-8-10 8-10z' fill='%233b82f6'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- Animated Background -->
-<div class="bg-orbs" aria-hidden="true">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <div class="orb orb-4"></div>
-</div>
-<div class="grid-overlay" aria-hidden="true"></div>
+<!-- ===================== Background ===================== -->
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-glow bg-glow-a" aria-hidden="true"></div>
+<div class="bg-glow bg-glow-b" aria-hidden="true"></div>
 
-<!-- Navigation -->
-<nav class="nav" id="nav">
-  <div class="nav-inner">
-    <a href="#" class="nav-logo">
-      <span class="logo-mark">◆</span>
-      <span class="logo-text">Elara</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="#features">Features</a></li>
-      <li><a href="#modules">Modules</a></li>
-      <li><a href="#music">Music</a></li>
-      <li><a href="#themes">Themes</a></li>
-      <li><a href="#about">About</a></li>
-    </ul>
-    <div class="nav-actions">
-      <a href="https://github.com/Tenyze/Elara" target="_blank" rel="noopener" class="btn btn-ghost">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 007.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.3-.52-1.48.11-3.08 0 0 .97-.31 3.18 1.18a11 11 0 015.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.6.23 2.78.11 3.08.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.35.77 1.04.77 2.1v3.11c0 .31.21.67.8.56A11.5 11.5 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
-        GitHub
-      </a>
-      <a href="#download" class="btn btn-primary">Download</a>
+<!-- ===================== Sidebar ===================== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-diamond">◆</div>
+    <div class="logo-text">
+      <span class="logo-name">Elara</span>
+      <span class="logo-sub">CLIENT</span>
     </div>
   </div>
-</nav>
 
-<!-- Hero -->
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-content reveal-up">
-      <div class="badge">
-        <span class="pulse"></span>
-        vPre-6.x · Now Available
+  <div class="sidebar-scroll">
+    <div class="nav-group">
+      <div class="nav-group-title">Explore</div>
+      <a class="nav-item is-active" href="#home" data-spy="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+        <span>Home</span>
+      </a>
+      <a class="nav-item" href="#modules" data-spy="modules">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Modules</span>
+      </a>
+      <a class="nav-item" href="#music" data-spy="music">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span>Music Player</span>
+      </a>
+      <a class="nav-item" href="#themes" data-spy="themes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 100 18c1.5 0 2-1 2-2 0-1.5 1-1.5 1-3 0-1-.5-2-1.5-2H12a9 9 0 010-18z"/></svg>
+        <span>Themes</span>
+      </a>
+      <a class="nav-item nav-item-accent" href="#oneconfig" data-spy="oneconfig">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <span>OneConfig Mod</span>
+      </a>
+      <a class="nav-item" href="#about" data-spy="about">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span>About</span>
+      </a>
+      <a class="nav-item" href="#changelog" data-spy="changelog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>Changelog</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Get Elara</div>
+      <a href="#download" class="btn-sidebar-accent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download</span>
+      </a>
+      <a class="nav-item" href="https://github.com/Tenyze/Elara" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 007.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.3-.52-1.48.11-3.08 0 0 .97-.31 3.18 1.18a11 11 0 015.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.6.23 2.78.11 3.08.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.35.77 1.04.77 2.1v3.11c0 .31.21.67.8.56A11.5 11.5 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="sidebar-foot">
+    <span class="status-dot"></span>
+    <span>Elara available now · <em>OneConfig not yet open source</em></span>
+  </div>
+</aside>
+
+<!-- ===================== Mobile top bar ===================== -->
+<header class="mobile-bar">
+  <div class="mobile-logo"><span class="logo-diamond">◆</span><span class="logo-name">Elara</span></div>
+  <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- ===================== Main ===================== -->
+<main class="main">
+
+  <!-- ============ HOME ============ -->
+  <section class="section hero" id="home">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="badge"><span class="badge-dot"></span> v6.2x · Now Available</div>
+        <h1 class="hero-title">Elara <span class="grad">Client</span></h1>
+        <p class="hero-sub">A minimal Minecraft <span class="mono">1.8.9</span> PvP client<br>made for clean games.</p>
+
+        <div class="hero-actions">
+          <a href="#download" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Get Elara
+          </a>
+          <a href="https://github.com/Tenyze/Elara" target="_blank" rel="noopener" class="btn btn-ghost btn-lg">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 007.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.3-.52-1.48.11-3.08 0 0 .97-.31 3.18 1.18a11 11 0 015.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.6.23 2.78.11 3.08.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.35.77 1.04.77 2.1v3.11c0 .31.21.67.8.56A11.5 11.5 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+            GitHub
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-num" data-count="94">0</span>
+            <span class="stat-label">Total modules</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-count="24">0</span>
+            <span class="stat-label">Enabled</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-count="5">0</span>
+            <span class="stat-label">Categories</span>
+          </div>
+        </div>
       </div>
-      <h1 class="hero-title">
-        Elara <span class="gradient-text">Client</span>
-      </h1>
-      <p class="hero-subtitle">
-        A powerful Minecraft 1.8.9 Forge PvP Client<br>
-        <span class="muted">powered by Tenyze · built on OneConfig</span>
-      </p>
-      <div class="hero-actions">
-        <a href="#download" class="btn btn-primary btn-lg">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download Now
+
+      <div class="hero-visual">
+        <div class="window">
+          <div class="window-bar">
+            <div class="traffic"><span class="t red"></span><span class="t yellow"></span><span class="t green"></span></div>
+            <div class="window-title">OneConfig — Elara</div>
+            <div class="window-live"><span class="live-dot"></span> LIVE</div>
+          </div>
+          <div class="window-body">
+            <img src="assets/images/about-elara.png" alt="Elara Client — OneConfig GUI About page" draggable="false">
+          </div>
+        </div>
+        <div class="hero-badge-strip">
+          <span class="hbs-item">Forge 1.8.9</span>
+          <span class="hbs-item">OneConfig Mod</span>
+          <span class="hbs-item">NetEase Music</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-scroll">
+      <div class="mouse"><div class="wheel"></div></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ============ MODULES ============ -->
+  <section class="section" id="modules">
+    <div class="section-head">
+      <span class="eyebrow">Modules</span>
+      <h2>94 modules.<br><span class="grad">Zero compromise.</span></h2>
+      <p>Every module is tuned for competitive play, organised into clean categories.</p>
+    </div>
+
+    <div class="tabs" id="moduleTabs">
+      <button class="tab is-active" data-cat="combat">Combat</button>
+      <button class="tab" data-cat="movement">Movement</button>
+      <button class="tab" data-cat="render">Render</button>
+      <button class="tab" data-cat="utility">Utility</button>
+      <button class="tab" data-cat="world">World</button>
+      <button class="tab" data-cat="exploit">Exploit</button>
+      <button class="tab" data-cat="misc">Misc</button>
+    </div>
+
+    <div class="modules-layout">
+      <div class="module-grid" id="moduleGrid"></div>
+      <figure class="shot-card">
+        <img src="assets/images/module-combat.png" alt="Elara combat modules grid" draggable="false" loading="lazy">
+        <figcaption>Combat module panel — one config, one click.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ MUSIC ============ -->
+  <section class="section" id="music">
+    <div class="section-head">
+      <span class="eyebrow">Music Player</span>
+      <h2>Your soundtrack,<br><span class="grad">in-game.</span></h2>
+      <p>NetEase Cloud Music streaming, synced lyrics and a live spectrum analyser.</p>
+    </div>
+
+    <div class="tabs" id="musicTabs">
+      <button class="tab is-active" data-tab="player">Player</button>
+      <button class="tab" data-tab="playlist">Playlist</button>
+      <button class="tab" data-tab="online">Online</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </div>
+
+    <div class="music-layout">
+      <div class="music-shots">
+        <figure class="shot-card show" data-shot="player">
+          <img src="assets/images/music-playing.png" alt="Elara music player now playing" draggable="false" loading="lazy">
+          <figcaption>Now playing — cover, lyrics and live spectrum.</figcaption>
+        </figure>
+        <figure class="shot-card" data-shot="playlist">
+          <img src="assets/images/music-playlist.png" alt="Elara playlist detail" draggable="false" loading="lazy">
+          <figcaption>Playlists — 247 songs, one click Play All.</figcaption>
+        </figure>
+        <figure class="shot-card" data-shot="online">
+          <img src="assets/images/music-online.png" alt="Elara NetEase online music" draggable="false" loading="lazy">
+          <figcaption>NetEase Cloud Music — my playlists, follows & scrobbles.</figcaption>
+        </figure>
+        <figure class="shot-card" data-shot="settings">
+          <img src="assets/images/music-settings.png" alt="Elara music HUD settings" draggable="false" loading="lazy">
+          <figcaption>HUD settings — spectrum, cover & progress bar toggles.</figcaption>
+        </figure>
+      </div>
+
+      <div class="music-features">
+        <div class="music-feature">
+          <div class="mf-icon">♪</div>
+          <div><h4>NetEase Integration</h4><p>Search and stream millions of songs directly from NetEase Cloud Music.</p></div>
+        </div>
+        <div class="music-feature">
+          <div class="mf-icon">▦</div>
+          <div><h4>Real-time Spectrum</h4><p>A 24-band frequency visualisation that dances to your music.</p></div>
+        </div>
+        <div class="music-feature">
+          <div class="mf-icon">A</div>
+          <div><h4>Synced Lyrics</h4><p>Beautifully rendered CJK lyrics, scrolling line-by-line.</p></div>
+        </div>
+        <div class="music-feature">
+          <div class="mf-icon">▥</div>
+          <div><h4>Smart Cache</h4><p>Covers, lyrics and audio cached in a single unified cache folder.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THEMES ============ -->
+  <section class="section" id="themes">
+    <div class="section-head">
+      <span class="eyebrow">Themes</span>
+      <h2>Make it <span class="grad">yours.</span></h2>
+      <p>Six crafted themes, a full colour editor, and glass acrylic mode.</p>
+    </div>
+
+    <div class="themes-layout">
+      <div class="theme-grid" id="themeGrid">
+        <div class="theme-card" style="--t:#8b5cf6"><div class="theme-swatch"><div class="sw-bar"></div><div class="sw-row"><i></i><b></b></div><div class="sw-row"><i></i><b class="short"></b></div></div><h4>Dark Violet</h4><div class="theme-actions"><button>Edit</button><button class="apply">Apply</button></div></div>
+        <div class="theme-card" style="--t:#10b981"><div class="theme-swatch"><div class="sw-bar"></div><div class="sw-row"><i></i><b></b></div><div class="sw-row"><i></i><b class="short"></b></div></div><h4>Dark Emerald</h4><div class="theme-actions"><button>Edit</button><button class="apply">Apply</button></div></div>
+        <div class="theme-card" style="--t:#f59e0b"><div class="theme-swatch"><div class="sw-bar"></div><div class="sw-row"><i></i><b></b></div><div class="sw-row"><i></i><b class="short"></b></div></div><h4>Dark Ember</h4><div class="theme-actions"><button>Edit</button><button class="apply">Apply</button></div></div>
+        <div class="theme-card" style="--t:#ec4899"><div class="theme-swatch"><div class="sw-bar"></div><div class="sw-row"><i></i><b></b></div><div class="sw-row"><i></i><b class="short"></b></div></div><h4>Dark Rose</h4><div class="theme-actions"><button>Edit</button><button class="apply">Apply</button></div></div>
+        <div class="theme-card" style="--t:#38bdf8"><div class="theme-swatch"><div class="sw-bar"></div><div class="sw-row"><i></i><b></b></div><div class="sw-row"><i></i><b class="short"></b></div></div><h4>Dark Night</h4><div class="theme-actions"><button>Edit</button><button class="apply">Apply</button></div></div>
+        <div class="theme-card is-light" style="--t:#0f172a"><div class="theme-swatch"><div class="sw-bar"></div><div class="sw-row"><i></i><b></b></div><div class="sw-row"><i></i><b class="short"></b></div></div><h4>Light Pure</h4><div class="theme-actions"><button>Edit</button><button class="apply">Apply</button></div></div>
+        <div class="theme-card is-active" style="--t:#3b82f6"><div class="theme-swatch"><div class="sw-bar"></div><div class="sw-row"><i></i><b></b></div><div class="sw-row"><i></i><b class="short"></b></div></div><h4>My Custom Theme</h4><div class="theme-actions"><button>Edit</button><button class="apply active">Active</button></div></div>
+        <div class="theme-card" style="--t:#60a5fa"><div class="theme-swatch glass"><div class="sw-bar"></div><div class="sw-row"><i></i><b></b></div><div class="sw-row"><i></i><b class="short"></b></div></div><h4>PolyGlass Dark</h4><div class="theme-actions"><button>Edit</button><button class="apply">Apply</button></div></div>
+      </div>
+
+      <figure class="shot-card tall">
+        <img src="assets/images/themes.png" alt="Elara themes chooser" draggable="false" loading="lazy">
+        <figcaption>Theme chooser — native colour picker & live preview.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ ONECONFIG ============ -->
+  <section class="section oneconfig" id="oneconfig">
+    <div class="section-head">
+      <span class="eyebrow">OneConfig · Modified</span>
+      <h2>Rebuilt on<br><span class="grad">a better OneConfig.</span></h2>
+      <p>Elara ships with a heavily modified OneConfig API — new credits, del profiles and custom themes.</p>
+    </div>
+
+    <div class="oc-layout">
+      <div class="oc-copy">
+        <div class="oc-note">
+          <span class="oc-note-label">Powered by Tenyze</span>
+          <ul class="oc-list">
+            <li><span class="li-dot"></span> Update Themes &amp; Custom Themes</li>
+            <li><span class="li-dot"></span> Del Profiles</li>
+            <li><span class="li-dot"></span> Update Custom Credits</li>
+          </ul>
+        </div>
+
+        <div class="oc-versus">
+          <div class="oc-v-card">
+            <div class="oc-v-title">Elara</div>
+            <div class="oc-v-pill ok">Available now</div>
+            <p>Download and play today — 94 modules, integrated music, full theming.</p>
+          </div>
+          <div class="oc-v-card muted">
+            <div class="oc-v-title">OneConfig</div>
+            <div class="oc-v-pill soon">Not open source yet</div>
+            <p>Elara's OneConfig fork is bundled with the client but not yet published standalone.</p>
+          </div>
+        </div>
+      </div>
+
+      <figure class="shot-card">
+        <img src="assets/images/oneconfig-credits.png" alt="Elara modified OneConfig credits" draggable="false" loading="lazy">
+        <figcaption>Credits — development team &amp; libraries behind the fork.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="section" id="about">
+    <div class="section-head">
+      <span class="eyebrow">About</span>
+      <h2>Elara <span class="grad">Client</span></h2>
+      <p>A minimal Minecraft 1.8.9 Forge PvP client.</p>
+    </div>
+
+    <div class="about-layout">
+      <div class="meta-grid">
+        <div class="meta-row"><span>Version</span><b>v6.2x</b></div>
+        <div class="meta-row"><span>Author</span><b>Tenyze</b></div>
+        <div class="meta-row"><span>Based on</span><b>Forge 1.8.9</b></div>
+        <div class="meta-row"><span>UI Framework</span><b>OneConfig (modified)</b></div>
+      </div>
+      <figure class="shot-card">
+        <img src="assets/images/account-manager.png" alt="Elara account manager" draggable="false" loading="lazy">
+        <figcaption>Account manager — offline &amp; Microsoft accounts in one place.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ CHANGELOG ============ -->
+  <section class="section" id="changelog">
+    <div class="section-head">
+      <span class="eyebrow">Changelog</span>
+      <h2>Version <span class="grad">history.</span></h2>
+      <p>Release notes &amp; patch summaries for public builds.</p>
+    </div>
+
+    <div class="changelog-layout">
+      <div class="changelog-list">
+        <div class="clog-card">
+          <div class="clog-head"><span class="clog-ver">v6.2x</span><span class="clog-date">2026-08-20</span></div>
+          <ul>
+            <li>Fixed Scaffold placement (blockCount initialization)</li>
+            <li>Improved AimAssist — chest targeting + smooth acceleration</li>
+            <li>Integrated KnockbackDelay into Knockback as Delay mode</li>
+            <li>Enhanced BedPlates with 9-slice pseudo-rounded rectangles</li>
+            <li>Updated Clutch with 2×2 grid scanning for landing detection</li>
+            <li>Migrated MusicPlayer to an independent OneConfig module</li>
+            <li>Locked MusicPlayer to NetEase Cloud Music</li>
+            <li>Rewrote Home &amp; Changelog with a plain layout</li>
+          </ul>
+        </div>
+        <div class="clog-card">
+          <div class="clog-head"><span class="clog-ver">v6.1x</span><span class="clog-date">2025-08-19</span></div>
+          <ul>
+            <li>Added AimAssist smooth acceleration</li>
+            <li>Optimized KillAura rotation physics engine</li>
+            <li>Fixed Velocity reflection packet type error</li>
+            <li>Improved BlockHit delayed block algorithm</li>
+          </ul>
+        </div>
+        <div class="clog-card">
+          <div class="clog-head"><span class="clog-ver">v5.1x</span><span class="clog-date">2025-08-09</span></div>
+          <ul>
+            <li>Added Intave anti-cheat bypass support</li>
+            <li>Refactored Knockback module + Delay mode</li>
+            <li>Fixed most reported issues from v5.0x</li>
+            <li>Optimized module card layout in OneConfig</li>
+          </ul>
+        </div>
+      </div>
+      <figure class="shot-card tall">
+        <img src="assets/images/changelog.png" alt="Elara changelog page" draggable="false" loading="lazy">
+        <figcaption>Changelog — version history in OneConfig.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ DOWNLOAD ============ -->
+  <section class="section" id="download">
+    <div class="cta">
+      <div class="cta-glow" aria-hidden="true"></div>
+      <span class="eyebrow">Get Elara</span>
+      <h2>Elara is <span class="grad">available now.</span></h2>
+      <p class="cta-sub">Download, install via Forge 1.8.9 and get in game.</p>
+
+      <div class="cta-actions">
+        <a href="https://github.com/Tenyze/Elara/releases" target="_blank" rel="noopener" class="btn btn-primary btn-xl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Elara
         </a>
-        <a href="#features" class="btn btn-ghost btn-lg">
-          Explore Features
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <a href="https://github.com/Tenyze/Elara" target="_blank" rel="noopener" class="btn btn-ghost btn-xl">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 007.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.3-.52-1.48.11-3.08 0 0 .97-.31 3.18 1.18a11 11 0 015.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.6.23 2.78.11 3.08.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.35.77 1.04.77 2.1v3.11c0 .31.21.67.8.56A11.5 11.5 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+          View source on GitHub
         </a>
       </div>
-      <div class="hero-stats">
-        <div class="stat">
-          <span class="stat-num" data-count="99">0</span>
-          <span class="stat-label">Modules</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <span class="stat-num" data-count="7">0</span>
-          <span class="stat-label">Categories</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <span class="stat-num" data-count="50">0</span>
-          <span class="stat-label">Features</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- Hero Preview Card -->
-    <div class="hero-visual reveal-right">
-      <div class="preview-card floating">
-        <div class="preview-header">
-          <div class="traffic-lights">
-            <span class="light red"></span>
-            <span class="light yellow"></span>
-            <span class="light green"></span>
-          </div>
-          <div class="preview-title">OneConfig — Elara</div>
-          <div class="preview-badge">LIVE</div>
-        </div>
-        <div class="preview-body">
-          <div class="preview-sidebar">
-            <div class="side-logo">⚙NECONFIG</div>
-            <div class="side-section">
-              <div class="side-item active">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                All
-              </div>
-            </div>
-            <div class="side-section-title">CATEGORIES</div>
-            <div class="side-item"><span class="dot c-combat"></span>Combat</div>
-            <div class="side-item"><span class="dot c-movement"></span>Movement</div>
-            <div class="side-item"><span class="dot c-render"></span>Render</div>
-            <div class="side-item"><span class="dot c-world"></span>World</div>
-            <div class="side-item"><span class="dot c-utility"></span>Utility</div>
-            <div class="side-item"><span class="dot c-exploit"></span>Exploit</div>
-            <div class="side-item"><span class="dot c-misc"></span>Misc</div>
-          </div>
-          <div class="preview-main">
-            <div class="preview-toolbar">
-              <span class="toolbar-title">Modules</span>
-              <div class="toolbar-search">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                Search...
-              </div>
-            </div>
-            <div class="module-grid">
-              <div class="module-card"><div class="mod-icon">⚔</div><div class="mod-name">KillAura</div><div class="mod-status">OFF</div></div>
-              <div class="module-card"><div class="mod-icon">🏃</div><div class="mod-name">Speed</div><div class="mod-status">OFF</div></div>
-              <div class="module-card active"><div class="mod-icon">🏗</div><div class="mod-name">Scaffold</div><div class="mod-status on">ON</div></div>
-              <div class="module-card"><div class="mod-icon">✨</div><div class="mod-name">ESP</div><div class="mod-status">OFF</div></div>
-              <div class="module-card"><div class="mod-icon">💥</div><div class="mod-name">NoSlow</div><div class="mod-status">OFF</div></div>
-              <div class="module-card active"><div class="mod-icon">🎯</div><div class="mod-name">TargetHUD</div><div class="mod-status on">ON</div></div>
-            </div>
-          </div>
-        </div>
+      <div class="cta-note">
+        <p><strong>OneConfig is not open source yet.</strong> Elara is free to download now; the modified OneConfig fork ships inside the client.</p>
       </div>
-      <div class="glow-ring"></div>
     </div>
-  </div>
+  </section>
 
-  <div class="hero-scroll">
-    <div class="mouse">
-      <div class="wheel"></div>
-    </div>
-    <span>Scroll to explore</span>
-  </div>
-</section>
-
-<!-- Features -->
-<section class="section features" id="features">
-  <div class="section-head reveal-up">
-    <span class="eyebrow">FEATURES</span>
-    <h2>Built for <span class="gradient-text">excellence</span></h2>
-    <p>Every module, every pixel, every interaction — crafted with precision.</p>
-  </div>
-  <div class="features-grid">
-    <div class="feature-card reveal-up" style="--delay:0">
-      <div class="feature-icon icon-1">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      </div>
-      <h3>Blazing Performance</h3>
-      <p>Optimised for high-refresh-rate gameplay with minimal CPU and GPU overhead. No lag, no stutter — just raw performance.</p>
-    </div>
-    <div class="feature-card reveal-up" style="--delay:1">
-      <div class="feature-icon icon-2">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m4.22-13.22l-4.22 4.22m-6 6l-4.22 4.22M23 12h-6m-6 0H1m15.22 4.22L13 13m-6-6L2.78 2.78"/></svg>
-      </div>
-      <h3>OneConfig Native</h3>
-      <p>Deeply integrated with Polyfrost's OneConfig. Modules, HUDs, profiles and accounts — all accessible through one unified interface.</p>
-    </div>
-    <div class="feature-card reveal-up" style="--delay:2">
-      <div class="feature-icon icon-3">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-      </div>
-      <h3>Integrated Music</h3>
-      <p>MP3/FLAC playback with real-time spectrum analyser, lyrics display, album art and NetEase Cloud Music streaming built-in.</p>
-    </div>
-    <div class="feature-card reveal-up" style="--delay:3">
-      <div class="feature-icon icon-4">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      </div>
-      <h3>Customisable HUDs</h3>
-      <p>PotionHUD, TargetHUD, MusicHUD and more. Reposition, rescale, blur and theme — every HUD is fully yours to control.</p>
-    </div>
-    <div class="feature-card reveal-up" style="--delay:4">
-      <div class="feature-icon icon-5">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </div>
-      <h3>Profile System</h3>
-      <p>Save complete configurations — modules, keybinds, HUD layouts — under named profiles. Switch playstyles with one click.</p>
-    </div>
-    <div class="feature-card reveal-up" style="--delay:5">
-      <div class="feature-icon icon-6">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-      </div>
-      <h3>Account Manager</h3>
-      <p>Seamlessly manage Microsoft and offline accounts. Switch, refresh tokens and play — all without leaving the game.</p>
-    </div>
-  </div>
-</section>
-
-<!-- Modules Showcase -->
-<section class="section modules-section" id="modules">
-  <div class="section-head reveal-up">
-    <span class="eyebrow">MODULES</span>
-    <h2>99 modules.<br><span class="gradient-text">Zero compromise.</span></h2>
-    <p>From combat to creativity — every module is tuned for competitive play.</p>
-  </div>
-
-  <div class="mod-tabs reveal-up">
-    <button class="mod-tab active" data-cat="combat">Combat</button>
-    <button class="mod-tab" data-cat="movement">Movement</button>
-    <button class="mod-tab" data-cat="render">Render</button>
-    <button class="mod-tab" data-cat="world">World</button>
-    <button class="mod-tab" data-cat="utility">Utility</button>
-    <button class="mod-tab" data-cat="exploit">Exploit</button>
-    <button class="mod-tab" data-cat="misc">Misc</button>
-  </div>
-
-  <div class="mod-display">
-    <div class="mod-preview reveal-up">
-      <img id="modPreviewImg" src="assets/images/Elara ModPage.png" alt="Modules preview" draggable="false">
-    </div>
-    <div class="mod-cards reveal-right" id="modCards">
-      <!-- JS populated -->
-    </div>
-  </div>
-</section>
-
-<!-- Music Section -->
-<section class="section music-section" id="music">
-  <div class="music-bg" aria-hidden="true">
-    <div class="music-orb"></div>
-  </div>
-  <div class="section-head reveal-up">
-    <span class="eyebrow">MUSIC PLAYER</span>
-    <h2>Your soundtrack,<br><span class="gradient-text">in-game.</span></h2>
-    <p>Local files, NetEase streaming, spectrum visualisation, synced lyrics.</p>
-  </div>
-
-  <div class="music-showcase">
-    <div class="music-card reveal-up">
-      <div class="music-cover">
-        <div class="cover-placeholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="sidebar-logo">
+          <div class="logo-diamond">◆</div>
+          <div class="logo-text"><span class="logo-name">Elara</span><span class="logo-sub">CLIENT</span></div>
         </div>
+        <p>A minimal Minecraft 1.8.9 Forge PvP client,<br>built on a modified OneConfig API.</p>
       </div>
-      <div class="music-info">
-        <div class="music-title">i miss you</div>
-        <div class="music-artist">kuudere</div>
-        <div class="music-progress">
-          <div class="progress-track"><div class="progress-fill"></div></div>
-          <div class="progress-time"><span>0:25</span><span>2:20</span></div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h5>Product</h5>
+          <a href="#modules">Modules</a>
+          <a href="#music">Music Player</a>
+          <a href="#themes">Themes</a>
+          <a href="#changelog">Changelog</a>
         </div>
-        <div class="music-controls">
-          <button class="ctrl-btn">⏮</button>
-          <button class="ctrl-btn play">▶</button>
-          <button class="ctrl-btn">⏭</button>
-          <button class="ctrl-btn small">🔁</button>
+        <div class="footer-col">
+          <h5>Resources</h5>
+          <a href="https://github.com/Tenyze/Elara" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/Tenyze/Elara/releases" target="_blank" rel="noopener">Releases</a>
+          <a href="#download">Download</a>
         </div>
-      </div>
-      <div class="music-spectrum">
-        <div class="spectrum-bar" style="--h:40%"></div>
-        <div class="spectrum-bar" style="--h:65%"></div>
-        <div class="spectrum-bar" style="--h:30%"></div>
-        <div class="spectrum-bar" style="--h:80%"></div>
-        <div class="spectrum-bar" style="--h:50%"></div>
-        <div class="spectrum-bar" style="--h:70%"></div>
-        <div class="spectrum-bar" style="--h:45%"></div>
-        <div class="spectrum-bar" style="--h:90%"></div>
-        <div class="spectrum-bar" style="--h:35%"></div>
-        <div class="spectrum-bar" style="--h:60%"></div>
-        <div class="spectrum-bar" style="--h:75%"></div>
-        <div class="spectrum-bar" style="--h:55%"></div>
-        <div class="spectrum-bar" style="--h:85%"></div>
-        <div class="spectrum-bar" style="--h:40%"></div>
-        <div class="spectrum-bar" style="--h:65%"></div>
-      </div>
-    </div>
-
-    <div class="music-features reveal-right">
-      <div class="music-feature">
-        <div class="mf-icon">🎵</div>
-        <div>
-          <h4>NetEase Integration</h4>
-          <p>Search and stream millions of songs directly from NetEase Cloud Music.</p>
-        </div>
-      </div>
-      <div class="music-feature">
-        <div class="mf-icon">📊</div>
-        <div>
-          <h4>Real-time Spectrum</h4>
-          <p>Live audio frequency visualisation that dances to your music.</p>
-        </div>
-      </div>
-      <div class="music-feature">
-        <div class="mf-icon">📝</div>
-        <div>
-          <h4>Synced Lyrics</h4>
-          <p>Beautifully rendered CJK lyrics that scroll with the music.</p>
-        </div>
-      </div>
-      <div class="music-feature">
-        <div class="mf-icon">💾</div>
-        <div>
-          <h4>Smart Cache</h4>
-          <p>Covers, lyrics and audio cached in a single unified .cache folder.</p>
+        <div class="footer-col">
+          <h5>Project</h5>
+          <a href="#oneconfig">OneConfig Mod</a>
+          <a href="#about">About</a>
         </div>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- Themes -->
-<section class="section themes-section" id="themes">
-  <div class="section-head reveal-up">
-    <span class="eyebrow">THEMES</span>
-    <h2>Make it <span class="gradient-text">yours.</span></h2>
-    <p>Six carefully crafted themes, or create your own. Your style, your rules.</p>
-  </div>
-
-  <div class="themes-grid">
-    <div class="theme-card reveal-up" style="--delay:0">
-      <div class="theme-preview theme-dark-violet">
-        <div class="tp-bar tp-violet"></div>
-        <div class="tp-rows">
-          <div class="tp-row"><span class="tp-dot violet"></span><span class="tp-line long"></span></div>
-          <div class="tp-row"><span class="tp-dot violet"></span><span class="tp-line"></span></div>
-          <div class="tp-row"><span class="tp-dot violet"></span><span class="tp-line short"></span></div>
-          <div class="tp-row"><span class="tp-dot violet"></span><span class="tp-line"></span></div>
-        </div>
-      </div>
-      <h4>Dark Violet</h4>
-      <div class="theme-actions"><button class="btn-edit">✎ Edit</button><button class="btn-apply">Apply</button></div>
+    <div class="footer-bottom">
+      <span>© 2025 Elara Client. All rights reserved.</span>
+      <span>Made with ♥ by Tenyze</span>
     </div>
-    <div class="theme-card reveal-up" style="--delay:1">
-      <div class="theme-preview theme-dark-emerald">
-        <div class="tp-bar tp-emerald"></div>
-        <div class="tp-rows">
-          <div class="tp-row"><span class="tp-dot emerald"></span><span class="tp-line long"></span></div>
-          <div class="tp-row"><span class="tp-dot emerald"></span><span class="tp-line"></span></div>
-          <div class="tp-row"><span class="tp-dot emerald"></span><span class="tp-line short"></span></div>
-          <div class="tp-row"><span class="tp-dot emerald"></span><span class="tp-line"></span></div>
-        </div>
-      </div>
-      <h4>Dark Emerald</h4>
-      <div class="theme-actions"><button class="btn-edit">✎ Edit</button><button class="btn-apply">Apply</button></div>
-    </div>
-    <div class="theme-card reveal-up" style="--delay:2">
-      <div class="theme-preview theme-dark-ember">
-        <div class="tp-bar tp-ember"></div>
-        <div class="tp-rows">
-          <div class="tp-row"><span class="tp-dot ember"></span><span class="tp-line long"></span></div>
-          <div class="tp-row"><span class="tp-dot ember"></span><span class="tp-line"></span></div>
-          <div class="tp-row"><span class="tp-dot ember"></span><span class="tp-line short"></span></div>
-          <div class="tp-row"><span class="tp-dot ember"></span><span class="tp-line"></span></div>
-        </div>
-      </div>
-      <h4>Dark Ember</h4>
-      <div class="theme-actions"><button class="btn-edit">✎ Edit</button><button class="btn-apply">Apply</button></div>
-    </div>
-    <div class="theme-card reveal-up" style="--delay:3">
-      <div class="theme-preview theme-dark-rose">
-        <div class="tp-bar tp-rose"></div>
-        <div class="tp-rows">
-          <div class="tp-row"><span class="tp-dot rose"></span><span class="tp-line long"></span></div>
-          <div class="tp-row"><span class="tp-dot rose"></span><span class="tp-line"></span></div>
-          <div class="tp-row"><span class="tp-dot rose"></span><span class="tp-line short"></span></div>
-          <div class="tp-row"><span class="tp-dot rose"></span><span class="tp-line"></span></div>
-        </div>
-      </div>
-      <h4>Dark Rose</h4>
-      <div class="theme-actions"><button class="btn-edit">✎ Edit</button><button class="btn-apply">Apply</button></div>
-    </div>
-    <div class="theme-card reveal-up" style="--delay:4">
-      <div class="theme-preview theme-dark-night">
-        <div class="tp-bar tp-blue"></div>
-        <div class="tp-rows">
-          <div class="tp-row"><span class="tp-dot blue"></span><span class="tp-line long"></span></div>
-          <div class="tp-row"><span class="tp-dot blue"></span><span class="tp-line"></span></div>
-          <div class="tp-row"><span class="tp-dot blue"></span><span class="tp-line short"></span></div>
-          <div class="tp-row"><span class="tp-dot blue"></span><span class="tp-line"></span></div>
-        </div>
-      </div>
-      <h4>Dark Night</h4>
-      <div class="theme-actions"><button class="btn-edit">✎ Edit</button><button class="btn-apply">Apply</button></div>
-    </div>
-    <div class="theme-card reveal-up active" style="--delay:5">
-      <div class="theme-preview theme-light-pure">
-        <div class="tp-bar tp-slate"></div>
-        <div class="tp-rows">
-          <div class="tp-row"><span class="tp-dot slate"></span><span class="tp-line long"></span></div>
-          <div class="tp-row"><span class="tp-dot slate"></span><span class="tp-line"></span></div>
-          <div class="tp-row"><span class="tp-dot slate"></span><span class="tp-line short"></span></div>
-          <div class="tp-row"><span class="tp-dot slate"></span><span class="tp-line"></span></div>
-        </div>
-      </div>
-      <h4>Light Pure</h4>
-      <div class="theme-actions"><button class="btn-edit">✎ Edit</button><button class="btn-apply active">Active</button></div>
-    </div>
-  </div>
-</section>
-
-<!-- About / Stats -->
-<section class="section about-section" id="about">
-  <div class="about-card reveal-up">
-    <div class="about-header">
-      <span class="eyebrow light">ABOUT</span>
-      <h2>Elara Client</h2>
-      <p class="about-tag">A Minecraft 1.8.9 Forge PvP Client</p>
-    </div>
-    <div class="about-grid">
-      <div class="about-row">
-        <span class="about-label">Version</span>
-        <span class="about-value">Pre-6.x</span>
-      </div>
-      <div class="about-row">
-        <span class="about-label">Author</span>
-        <span class="about-value">Tenyze</span>
-      </div>
-    </div>
-    <div class="about-stats">
-      <div class="about-stat">
-        <span class="as-num">99</span>
-        <span class="as-label">Total Modules</span>
-      </div>
-      <div class="about-stat">
-        <span class="as-num">29</span>
-        <span class="as-label">Enabled</span>
-      </div>
-      <div class="about-stat">
-        <span class="as-num">5</span>
-        <span class="as-label">Categories</span>
-      </div>
-    </div>
-    <div class="about-credits">
-      <div class="about-row">
-        <span class="about-label">Based on</span>
-        <span class="about-value">Minecraft Forge 1.8.9</span>
-      </div>
-      <div class="about-row">
-        <span class="about-label">UI Framework</span>
-        <span class="about-value">OneConfig by Polyfrost</span>
-      </div>
-      <div class="about-row">
-        <span class="about-label">Special Thanks</span>
-        <span class="about-value">To all contributors and testers</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Download / CTA -->
-<section class="section cta-section" id="download">
-  <div class="cta-card reveal-up">
-    <div class="cta-glow"></div>
-    <h2>Ready to dominate?</h2>
-    <p>Join thousands of players using Elara for competitive Minecraft PvP.</p>
-    <div class="cta-actions">
-      <a href="#" class="btn btn-primary btn-xl">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download Elara
-      </a>
-      <a href="https://github.com/Tenyze/Elara" target="_blank" rel="noopener" class="btn btn-ghost btn-xl">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 007.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.3-.52-1.48.11-3.08 0 0 .97-.31 3.18 1.18a11 11 0 015.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.6.23 2.78.11 3.08.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.35.77 1.04.77 2.1v3.11c0 .31.21.67.8.56A11.5 11.5 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
-        View on GitHub
-      </a>
-    </div>
-    <p class="cta-note">Free forever · No data collection · Open source</p>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <div class="nav-logo">
-        <span class="logo-mark">◆</span>
-        <span class="logo-text">Elara</span>
-      </div>
-      <p>A modern Minecraft 1.8.9 Forge PvP client<br>built on the OneConfig API.</p>
-    </div>
-    <div class="footer-cols">
-      <div class="footer-col">
-        <h5>Product</h5>
-        <a href="#features">Features</a>
-        <a href="#modules">Modules</a>
-        <a href="#music">Music</a>
-        <a href="#themes">Themes</a>
-      </div>
-      <div class="footer-col">
-        <h5>Resources</h5>
-        <a href="https://github.com/Tenyze/Elara" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/Polyfrost/OneConfig" target="_blank" rel="noopener">OneConfig</a>
-        <a href="#download">Download</a>
-      </div>
-      <div class="footer-col">
-        <h5>Community</h5>
-        <a href="#">Discord</a>
-        <a href="#">Credits</a>
-        <a href="#">Support</a>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2025 Elara Client. All rights reserved.</span>
-    <span>Made with ♥ by Tenyze</span>
-  </div>
-</footer>
+  </footer>
+</main>
 
 <script src="script.js"></script>
 </body>

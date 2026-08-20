@@ -1,343 +1,217 @@
-// ===================== SCROLL REVEAL =====================
-const observerOptions = {
-  threshold: 0.15,
-  rootMargin: '0px 0px -50px 0px'
-};
+/* ===================================================================
+   Elara Client — website interactions
+   =================================================================== */
 
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      observer.unobserve(entry.target);
-    }
-  });
-}, observerOptions);
-
-document.querySelectorAll('.reveal-up, .reveal-right, .feature-card, .theme-card, .mod-preview, .mod-cards, .music-card, .music-features, .about-card, .cta-card, .mod-tabs')
-  .forEach((el) => observer.observe(el));
-
-// ===================== NAV SCROLL =====================
-const nav = document.getElementById('nav');
-let lastScroll = 0;
-
-window.addEventListener('scroll', () => {
-  const currentScroll = window.pageYOffset;
-  nav.classList.toggle('scrolled', currentScroll > 50);
-  lastScroll = currentScroll;
-});
-
-// ===================== COUNT UP =====================
-const animateCount = (el) => {
-  const target = parseInt(el.dataset.count, 10);
-  const duration = 2000;
-  const start = performance.now();
-
-  const update = (now) => {
-    const progress = Math.min((now - start) / duration, 1);
-    const easeOut = 1 - Math.pow(1 - progress, 3);
-    el.textContent = Math.floor(easeOut * target);
-    if (progress < 1) requestAnimationFrame(update);
-  };
-
-  requestAnimationFrame(update);
-};
-
-const countObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      animateCount(entry.target);
-      countObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.5 });
-
-document.querySelectorAll('.stat-num').forEach((el) => countObserver.observe(el));
-
-// ===================== MODULE TABS =====================
-const modData = {
+const MODULES = {
   combat: [
-    { icon: '⚔', name: 'KillAura', desc: 'Smart auto-attack with reach, target switching and rotations.' },
-    { icon: '💥', name: 'Criticals', desc: 'Always deal critical hits with vanilla swing timing.' },
-    { icon: '🎯', name: 'HitBox', desc: 'Expand entity hitboxes for easier clicking.' },
-    { icon: '🏹', name: 'Reach', desc: 'Extend your attack range beyond vanilla limits.' },
-    { icon: '👟', name: 'SprintReset', desc: 'Cancel sprint on hit for maximum knockback.' },
-    { icon: '⚡', name: 'SuperKnockback', desc: 'Deal massive knockback with every hit.' },
-    { icon: '🌀', name: 'TargetStrafe', desc: 'Strafe around your target with smart movement.' },
-    { icon: '🔫', name: 'AutoProjectiles', desc: 'Automatically shoot projectiles at targets.' },
-    { icon: '💊', name: 'AutoHeal', desc: 'Automatically drink pots and heal when low.' },
-    { icon: '🪓', name: 'AutoAnduril', desc: 'Automate Anduril sword special attacks.' },
-    { icon: '🎲', name: 'Displace', desc: 'Force opponents to move off their spot.' },
-    { icon: '🖱', name: 'HitSelect', desc: 'Choose the best target to hit.' }
+    { n: 'KillAura', i: '⚔', on: true },
+    { n: 'AimAssist', i: '🎯', on: true },
+    { n: 'AutoClicker', i: '🖱', on: true },
+    { n: 'KeepSprint', i: '👟', on: true },
+    { n: 'AutoAnduril', i: '🗡', on: false },
+    { n: 'AutoProjectiles', i: '🏹', on: false },
+    { n: 'BlockHit', i: '🛡', on: false },
+    { n: 'Criticals', i: '💥', on: false },
+    { n: 'Displace', i: '🌀', on: false },
+    { n: 'HitBox', i: '📐', on: false },
+    { n: 'HitSelect', i: '✳', on: false },
+    { n: 'Hitflick', i: '⚡', on: false },
+    { n: 'Knockback', i: '🥊', on: false },
+    { n: 'KnockbackLegacy', i: '🥊', on: false },
+    { n: 'Reach', i: '📏', on: false },
+    { n: 'SuperKnockback', i: '💢', on: false },
+    { n: 'TargetStrafe', i: '🔄', on: false },
+    { n: 'Velocity', i: '🌊', on: false },
+    { n: 'Wtap', i: '✋', on: false }
   ],
   movement: [
-    { icon: '🏃', name: 'Speed', desc: 'Boost movement speed with vanilla-like feel.' },
-    { icon: '💨', name: 'Sprint', desc: 'Auto-sprint in all directions, even backwards.' },
-    { icon: '🪁', name: 'Fly', desc: 'Fly freely with configurable speed and mode.' },
-    { icon: '🍂', name: 'NoFall', desc: 'Prevent fall damage from any height.' },
-    { icon: '👟', name: 'LongJump', desc: 'Jump further than vanilla allows.' },
-    { icon: '🛡', name: 'SafeWalk', desc: 'Prevent walking off edges.' },
-    { icon: '🦅', name: 'Eagle', desc: 'Auto-sneak at block edges.' },
-    { icon: '🟦', name: 'Jesus', desc: 'Walk on water and lava surfaces.' },
-    { icon: '🕳', name: 'AntiVoid', desc: 'Prevent falling into the void.' },
-    { icon: '🆘', name: 'AutoMLG', desc: 'Auto-place water to prevent fall damage.' },
-    { icon: '🦘', name: 'KeepSprint', desc: 'Maintain sprint even after hitting.' },
-    { icon: '⏳', name: 'Stasis', desc: 'Freeze in place while keeping momentum.' }
+    { n: 'Sprint', i: '🏃', on: true },
+    { n: 'NoSlow', i: '🚶', on: true },
+    { n: 'Scaffold', i: '🏗', on: true },
+    { n: 'Fly', i: '🕊', on: false },
+    { n: 'LongJump', i: '🦘', on: false },
+    { n: 'Speed', i: '⚡', on: false },
+    { n: 'Eagle', i: '🦅', on: false },
+    { n: 'NoFall', i: '🍂', on: false },
+    { n: 'SafeWalk', i: '🧱', on: false },
+    { n: 'AntiVoid', i: '🕳', on: false },
+    { n: 'AutoMLG', i: '🪣', on: false },
+    { n: 'Clutch', i: '🧗', on: false },
+    { n: 'InventoryMove', i: '🎒', on: false },
+    { n: 'Stasis', i: '⏸', on: false }
   ],
   render: [
-    { icon: '👁', name: 'ESP', desc: 'See entities through walls with full customisation.' },
-    { icon: '✨', name: 'ShaderESP', desc: 'Beautiful shader-based ESP rendering.' },
-    { icon: '🔥', name: 'Chams', desc: 'See entities through walls with glow chams.' },
-    { icon: '🎯', name: 'TargetHUD', desc: 'Detailed info display on your current target.' },
-    { icon: '🧪', name: 'PotionHUD', desc: 'Display active potion effects with timers.' },
-    { icon: '💧', name: 'WaterMark', desc: 'Customisable watermark display.' },
-    { icon: '🏹', name: 'Tracers', desc: 'Draw lines to entities on screen.' },
-    { icon: '📏', name: 'Trajectories', desc: 'Show projectile paths before shooting.' },
-    { icon: '🏷', name: 'NameTags', desc: 'Customisable name tags above entities.' },
-    { icon: '💡', name: 'ItemGlow', desc: 'Glow effects on dropped items.' },
-    { icon: '🎭', name: 'FreeLook', desc: 'Look around without turning your body.' },
-    { icon: '📊', name: 'Indicators', desc: 'Display combat indicators on screen.' }
-  ],
-  world: [
-    { icon: '🏗', name: 'Scaffold', desc: 'Auto-place blocks with smart rotations and safe-point.' },
-    { icon: '👕', name: 'Telly', desc: 'Teleport using ender pearls or chorus fruit.' },
-    { icon: '⛏', name: 'SpeedMine', desc: 'Instantly break blocks with configurable delay.' },
-    { icon: '📦', name: 'AutoBlockIn', desc: 'Auto-place blocks in specific scenarios.' },
-    { icon: '🛏', name: 'BedBreaker', desc: 'Break beds quickly in the nether.' },
-    { icon: '🛏', name: 'BedESP', desc: 'Highlight beds through walls.' },
-    { icon: '🛏', name: 'BedTracker', desc: 'Track nearby beds for rush scenarios.' },
-    { icon: '🛏', name: 'BedPlates', desc: 'Smart bed placement logic.' },
-    { icon: '🏚', name: 'ChestESP', desc: 'Highlight chests and containers through walls.' },
-    { icon: '💎', name: 'ItemESP', desc: 'Highlight valuable dropped items.' },
-    { icon: '🔦', name: 'FullBright', desc: 'Maximum brightness in dark areas.' },
-    { icon: '🔍', name: 'Xray', desc: 'See ores and valuable blocks through terrain.' }
+    { n: 'TargetHUD', i: '🎯', on: true },
+    { n: 'HUD', i: '🖥', on: true },
+    { n: 'ESP', i: '👁', on: false },
+    { n: 'Chams', i: '👤', on: false },
+    { n: 'NameTags', i: '🏷', on: false },
+    { n: 'Tracers', i: '📡', on: false },
+    { n: 'Trajectories', i: '📈', on: false },
+    { n: 'FreeLook', i: '👀', on: false },
+    { n: 'Indicators', i: '📊', on: false },
+    { n: 'ItemGlow', i: '✨', on: false },
+    { n: 'PotionHUD', i: '🧪', on: false },
+    { n: 'ShaderESP', i: '🌈', on: false },
+    { n: 'CombatVisuals', i: '💫', on: false },
+    { n: 'WaterMark', i: '💧', on: false }
   ],
   utility: [
-    { icon: '🖱', name: 'AutoClicker', desc: 'Auto-click with configurable CPS and jitter.' },
-    { icon: '⛏', name: 'AutoTool', desc: 'Automatically select the best tool.' },
-    { icon: '🔄', name: 'AutoSwap', desc: 'Automatically swap items when needed.' },
-    { icon: '📂', name: 'ChestStealer', desc: 'Automatically steal items from chests.' },
-    { icon: '🎒', name: 'InvManager', desc: 'Organise and manage your inventory.' },
-    { icon: '🚶', name: 'InvWalk', desc: 'Walk while managing inventory.' },
-    { icon: '🖱', name: 'InventoryClicker', desc: 'Auto-click inventory slots.' },
-    { icon: '📝', name: 'Refill', desc: 'Refill supplies from nearby chests.' },
-    { icon: '👻', name: 'GhostHand', desc: 'Interact with blocks through walls.' },
-    { icon: '💬', name: 'Spammer', desc: 'Send chat messages automatically.' },
-    { icon: '🎯', name: 'Piercing', desc: 'Make projectiles pierce entities.' },
-    { icon: '🖐', name: 'MoreKB', desc: 'Increase knockback dealt to opponents.' }
+    { n: 'AutoTool', i: '⛏', on: true },
+    { n: 'AutoSwap', i: '🔁', on: false },
+    { n: 'ChestStealer', i: '📦', on: false },
+    { n: 'InvManager', i: '🗂', on: false },
+    { n: 'InventoryClicker', i: '🖱', on: false },
+    { n: 'GhostHand', i: '👻', on: false },
+    { n: 'MoreKB', i: '🥊', on: false },
+    { n: 'Piercing', i: '🔪', on: false },
+    { n: 'Refill', i: '🫗', on: false },
+    { n: 'Spammer', i: '💬', on: false }
+  ],
+  world: [
+    { n: 'FullBright', i: '☀', on: true },
+    { n: 'Scaffold', i: '🏗', on: false },
+    { n: 'Telly', i: '📡', on: false },
+    { n: 'BedBreaker', i: '🛏', on: false },
+    { n: 'BedESP', i: '🛏', on: false },
+    { n: 'BedPlates', i: '🛏', on: false },
+    { n: 'BedTracker', i: '📍', on: false },
+    { n: 'AutoBlockIn', i: '🧱', on: false },
+    { n: 'ChestESP', i: '📦', on: false },
+    { n: 'ItemESP', i: '📦', on: false },
+    { n: 'SpeedMine', i: '⛏', on: false },
+    { n: 'Xray', i: '🦴', on: false }
   ],
   exploit: [
-    { icon: '🐢', name: 'NoSlow', desc: 'Remove slowdown from items like shields and cobwebs.' },
-    { icon: '✨', name: 'Blink', desc: 'Teleport without sending movement packets.' },
-    { icon: '🌙', name: 'FakeLag', desc: 'Lag your opponent with delayed packets.' },
-    { icon: '⏪', name: 'BackTrack', desc: 'Send delayed position packets to server.' },
-    { icon: '🎯', name: 'LagRange', desc: 'Hit opponents beyond normal range via lag.' },
-    { icon: '⏱', name: 'Timer', desc: 'Speed up or slow down the game tick.' },
-    { icon: '🔄', name: 'NoRotate', desc: 'Prevent server-side rotation corrections.' },
-    { icon: '😵', name: 'NoHurtCam', desc: 'Remove the hurt camera shake.' },
-    { icon: '🦘', name: 'NoJumpDelay', desc: 'Remove delay between jumps.' },
-    { icon: '⛔', name: 'NoHitDelay', desc: 'Remove the hit cooldown after attacking.' },
-    { icon: '🏹', name: 'FastBow', desc: 'Instantly shoot a fully drawn bow.' },
-    { icon: '🏗', name: 'FastPlace', desc: 'Instantly place blocks without delay.' }
+    { n: 'BackTrack', i: '⏪', on: false },
+    { n: 'Blink', i: '💨', on: false },
+    { n: 'FakeLag', i: '🎭', on: false },
+    { n: 'FastBow', i: '🏹', on: false },
+    { n: 'FastPlace', i: '⚡', on: false },
+    { n: 'LagRange', i: '📶', on: false },
+    { n: 'NoHitDelay', i: '⏱', on: false },
+    { n: 'NoHurtCam', i: '🎥', on: false },
+    { n: 'NoJumpDelay', i: '🦘', on: false },
+    { n: 'NoRotate', i: '🧭', on: false },
+    { n: 'ServerLag', i: '📶', on: false },
+    { n: 'Timer', i: '⏱', on: false }
   ],
   misc: [
-    { icon: '🤖', name: 'AntiBot', desc: 'Prevent bot detection triggers.' },
-    { icon: '💚', name: 'AntiDebuff', desc: 'Prevent debuff application.' },
-    { icon: '🔥', name: 'AntiFireball', desc: 'Block incoming fireballs.' },
-    { icon: '🪤', name: 'AntiObbyTrap', desc: 'Escape obsidian traps.' },
-    { icon: '🔒', name: 'AntiObfuscate', desc: 'Deobfuscate server packets.' },
-    { icon: '🎭', name: 'ClientSpoofer', desc: 'Spoof client information.' },
-    { icon: '🔌', name: 'Disabler', desc: 'Disable server-side anticheat checks.' },
-    { icon: '🚩', name: 'FlagDetector', desc: 'Detect potential anticheat flags.' },
-    { icon: '🕵', name: 'HackerDetector', desc: 'Detect players using cheats.' },
-    { icon: '👤', name: 'NickHider', desc: 'Hide your real nickname.' },
-    { icon: '👥', name: 'Teams', desc: 'Team detection and management.' },
-    { icon: '🌀', name: 'ViewClip', desc: 'Render players through walls.' },
-    { icon: '📋', name: 'MCF', desc: 'Manage custom Minecraft functions.' }
+    { n: 'AntiBot', i: '🤖', on: true },
+    { n: 'AntiDebuff', i: '🛡', on: false },
+    { n: 'AntiFireball', i: '🔥', on: false },
+    { n: 'AntiObbyTrap', i: '🕸', on: false },
+    { n: 'AntiObfuscate', i: '🕵', on: false },
+    { n: 'ClientSpoofer', i: '🎭', on: false },
+    { n: 'Disabler', i: '🔌', on: false },
+    { n: 'FlagDetector', i: '🚩', on: false },
+    { n: 'HackerDetector', i: '🕵', on: false },
+    { n: 'NickHider', i: '🎭', on: false },
+    { n: 'Teams', i: '👥', on: false },
+    { n: 'ViewClip', i: '🎥', on: false }
   ]
 };
 
-const modPreviewImg = document.getElementById('modPreviewImg');
-const modCards = document.getElementById('modCards');
-const modTabs = document.querySelectorAll('.mod-tab');
+/* ---------------- Module grid ---------------- */
+const moduleGrid = document.getElementById('moduleGrid');
+const moduleTabs = document.getElementById('moduleTabs');
 
-const previewImages = {
-  combat: 'assets/images/Elara ModPage.png',
-  movement: 'assets/images/Elara ModPage.png',
-  render: 'assets/images/Elara ModPage.png',
-  world: 'assets/images/Elara ModPage.png',
-  utility: 'assets/images/Elara ModPage.png',
-  exploit: 'assets/images/Elara ModPage.png',
-  misc: 'assets/images/Elara ModPage.png'
-};
+function renderModules(cat) {
+  const list = MODULES[cat] || MODULES.combat;
+  moduleGrid.innerHTML = list.map(m => `
+    <div class="module-card${m.on ? ' is-on' : ''}">
+      <div class="mod-ic">${m.i}</div>
+      <div class="mod-name">${m.n}</div>
+      <span class="mod-state">${m.on ? 'ON' : 'OFF'}</span>
+    </div>
+  `).join('');
+}
 
-const renderModCards = (cat) => {
-  const mods = modData[cat] || [];
-  modCards.style.opacity = '0';
-  modCards.style.transform = 'translateX(20px)';
+moduleTabs.addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  moduleTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('is-active'));
+  btn.classList.add('is-active');
+  renderModules(btn.dataset.cat);
+});
 
-  setTimeout(() => {
-    modCards.innerHTML = mods.map((m) => `
-      <div class="mod-card">
-        <div class="mod-card-header">
-          <div class="mod-card-icon">${m.icon}</div>
-          <div class="mod-card-title">${m.name}</div>
-        </div>
-        <div class="mod-card-desc">${m.desc}</div>
-      </div>
-    `).join('');
-    modPreviewImg.src = previewImages[cat] || previewImages.combat;
-    modCards.style.opacity = '1';
-    modCards.style.transform = 'translateX(0)';
-  }, 250);
-};
-
-modTabs.forEach((tab) => {
-  tab.addEventListener('click', () => {
-    modTabs.forEach((t) => t.classList.remove('active'));
-    tab.classList.add('active');
-    renderModCards(tab.dataset.cat);
+/* ---------------- Music tabs ---------------- */
+const musicTabs = document.getElementById('musicTabs');
+musicTabs.addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  musicTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('is-active'));
+  btn.classList.add('is-active');
+  const target = btn.dataset.tab;
+  document.querySelectorAll('.music-shots .shot-card').forEach(sc => {
+    sc.classList.toggle('show', sc.dataset.shot === target);
   });
 });
 
-// Initial render
-renderModCards('combat');
+/* ---------------- Mobile menu ---------------- */
+const sidebar = document.getElementById('sidebar');
+const mobileToggle = document.getElementById('mobileToggle');
+mobileToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
 
-// ===================== SPECTRUM ANIMATION =====================
-const spectrumBars = document.querySelectorAll('.spectrum-bar');
-spectrumBars.forEach((bar, i) => {
-  bar.style.setProperty('--i', i);
-  const height = 30 + Math.random() * 60;
-  bar.style.setProperty('--h', `${height}%`);
+// Close mobile menu on nav click
+sidebar.addEventListener('click', (e) => {
+  if (e.target.closest('a')) sidebar.classList.remove('open');
 });
 
-// ===================== THEME CARD ACTIVE =====================
-document.querySelectorAll('.theme-card').forEach((card) => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.theme-card').forEach((c) => c.classList.remove('active'));
-    card.classList.add('active');
-    document.querySelectorAll('.btn-apply').forEach((btn) => {
-      btn.textContent = 'Apply';
-      btn.classList.remove('active');
-    });
-    card.querySelector('.btn-apply').textContent = 'Active';
-    card.querySelector('.btn-apply').classList.add('active');
+/* ---------------- Scrollspy ---------------- */
+const spySections = [...document.querySelectorAll('main section[id]')];
+const navItems = [...document.querySelectorAll('.nav-item[data-spy]')];
+
+function onScroll() {
+  const pos = window.scrollY + 140;
+  let current = 'home';
+  spySections.forEach(sec => {
+    if (sec.offsetTop <= pos) current = sec.id;
   });
-});
-
-// ===================== SMOOTH SCROLL FOR ANCHORS =====================
-document.querySelectorAll('a[href^="#"]').forEach((a) => {
-  a.addEventListener('click', (e) => {
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) {
-      e.preventDefault();
-      const navHeight = nav.offsetHeight;
-      const targetPos = target.getBoundingClientRect().top + window.pageYOffset - navHeight + 1;
-      window.scrollTo({ top: targetPos, behavior: 'smooth' });
-    }
+  navItems.forEach(item => {
+    item.classList.toggle('is-active', item.dataset.spy === current);
   });
-});
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
 
-// ===================== PARALLAX ORBS =====================
-const orbs = document.querySelectorAll('.orb');
-let mouseX = 0, mouseY = 0;
-
-window.addEventListener('mousemove', (e) => {
-  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-});
-
-window.addEventListener('scroll', () => {
-  const scrollY = window.pageYOffset;
-  orbs.forEach((orb, i) => {
-    const speed = 0.05 + i * 0.02;
-    orb.style.transform = `translate(${mouseX * speed * 50}px, ${mouseY * speed * 50 + scrollY * speed}px)`;
-  });
-});
-
-// ===================== MODAL (for download button) =====================
-document.querySelectorAll('[href="#download"]').forEach((btn) => {
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const cta = document.querySelector('.cta-section');
-    if (cta) {
-      cta.scrollIntoView({ behavior: 'smooth' });
-    }
-  });
-});
-
-// ===================== COPY TO CLIPBOARD FOR GITHUB =====================
-document.querySelectorAll('.btn-primary').forEach((btn) => {
-  btn.addEventListener('click', (e) => {
-    if (btn.textContent.includes('Download')) {
-      e.preventDefault();
-      const cta = document.querySelector('.cta-section');
-      if (cta) cta.scrollIntoView({ behavior: 'smooth' });
-    }
-  });
-});
-
-// ===================== KEYBOARD SHORTCUT =====================
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    document.body.style.transform = 'scale(1)';
+/* ---------------- Counter animation ---------------- */
+function animateCount(el) {
+  const target = +el.dataset.count;
+  const dur = 1200;
+  const start = performance.now();
+  function tick(now) {
+    const p = Math.min((now - start) / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(eased * target);
+    if (p < 1) requestAnimationFrame(tick);
   }
-});
-
-// ===================== LOADING COMPLETE =====================
-window.addEventListener('load', () => {
-  document.body.classList.add('loaded');
-  // Trigger initial observer checks
-  observer.callback && observer.callback();
-});
-
-// ===================== LAZY LOAD IMAGES =====================
-if ('IntersectionObserver' in window) {
-  const imgObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        if (img.dataset.src) {
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-        }
-        imgObserver.unobserve(img);
-      }
-    });
-  });
-
-  document.querySelectorAll('img[data-src]').forEach((img) => {
-    imgObserver.observe(img);
-  });
+  requestAnimationFrame(tick);
 }
 
-// ===================== CURSOR GLOW EFFECT =====================
-const cursorGlow = document.createElement('div');
-cursorGlow.style.cssText = `
-  position: fixed;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(124, 92, 255, 0.15) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-  transform: translate(-50%, -50%);
-  transition: opacity 0.3s;
-  opacity: 0;
-  mix-blend-mode: screen;
-`;
-document.body.appendChild(cursorGlow);
+/* ---------------- Reveal ---------------- */
+const revealEls = document.querySelectorAll('.section-head, .shot-card, .theme-card, .music-feature, .clog-card, .oc-v-card, .oc-note, .meta-row, .module-grid');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('reveal', 'in');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
 
-window.addEventListener('mousemove', (e) => {
-  cursorGlow.style.left = e.clientX + 'px';
-  cursorGlow.style.top = e.clientY + 'px';
-  cursorGlow.style.opacity = '1';
-});
+revealEls.forEach(el => revealObserver.observe(el));
 
-window.addEventListener('mouseleave', () => {
-  cursorGlow.style.opacity = '0';
-});
+/* ---------------- Counters on view ---------------- */
+const statObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      animateCount(entry.target);
+      statObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.6 });
+document.querySelectorAll('.stat-num').forEach(el => statObserver.observe(el));
 
-// Hide on touch devices
-if ('ontouchstart' in window) {
-  cursorGlow.style.display = 'none';
-}
+/* ---------------- Init ---------------- */
+renderModules('combat');
