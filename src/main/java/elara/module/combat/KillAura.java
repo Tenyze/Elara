@@ -53,21 +53,12 @@ public class KillAura extends Module {
     public final ModeProperty sort;
     public ModeProperty autoBlock;
     public ModeProperty hypixelMode;
-    private final BooleanProperty noSwap = new BooleanProperty("NoSwap", true, () -> this.autoBlock.getValue() == 2);
-    private final BooleanProperty test = new BooleanProperty("MoreAttack", false, () -> this.autoBlock.getValue() == 2);
-    private final IntProperty moreAttackDelay = new IntProperty("MoreAttackDelay", 1, 0, 3, () -> this.autoBlock.getValue() == 2 && test.getValue());
-    private final IntProperty maxTick = new IntProperty("MaxTick", 3, 1, 5, () -> this.autoBlock.getValue() == 6);
-    private final IntProperty startBlinkTick = new IntProperty("StartBlinkTick", 0, 1, 5, () -> this.autoBlock.getValue() == 6);
-    private final IntProperty stopBlinkTick = new IntProperty("StopBlinkTick", 2, 1, 5, () -> this.autoBlock.getValue() == 6);
-    private final IntProperty swapTick = new IntProperty("SwapTick", 2, 1, 5, () -> this.autoBlock.getValue() == 6);
-    private final IntProperty switchBackTick = new IntProperty("SwitchBackTick", 2, 1, 5, () -> this.autoBlock.getValue() == 6);
-    private final IntProperty stopBlockTick = new IntProperty("StopBlockTick", 2, 1, 5, () -> this.autoBlock.getValue() == 6);
-    public final IntProperty attackTick = new IntProperty("AttackTick", 0, 1, 5, () -> this.autoBlock.getValue() == 6);
-    private final IntProperty startBlockTick = new IntProperty("StartBlockTick", 0, 1, 5, () -> this.autoBlock.getValue() == 6);
-    private final BooleanProperty postStartBlock = new BooleanProperty("PostBlock", false, () -> this.autoBlock.getValue() == 6);
-    private final IntProperty predictHoldTicks = new IntProperty("PredictHold", 2, 1, 5, () -> this.autoBlock.getValue() == 7);
+    private final BooleanProperty noSwap = new BooleanProperty("NoSwap", true, () -> this.autoBlock.getValue() == 1);
+    private final BooleanProperty test = new BooleanProperty("MoreAttack", false, () -> this.autoBlock.getValue() == 1);
+    private final IntProperty moreAttackDelay = new IntProperty("MoreAttackDelay", 1, 0, 3, () -> this.autoBlock.getValue() == 1 && test.getValue());
+    private final IntProperty predictHoldTicks = new IntProperty("PredictHold", 2, 1, 5, () -> this.autoBlock.getValue() == 4);
     private final BooleanProperty forceBlockAnim = new BooleanProperty("Force Block Anim", true,
-            () -> this.autoBlock.getValue() == 3 || this.autoBlock.getValue() == 7);
+            () -> this.autoBlock.getValue() == 2 || this.autoBlock.getValue() == 4);
     public final BooleanProperty autoBlockRequirePress;
     public final IntProperty autoBlockCPS;
     public final FloatProperty autoBlockRange;
@@ -97,7 +88,6 @@ public class KillAura extends Module {
     public final BooleanProperty golems;
     public final BooleanProperty silverfish;
     public final BooleanProperty teams;
-    public ModeProperty showTarget;
 
     private final TimerUtil timer = new TimerUtil();
     public AttackData target = null;
@@ -108,13 +98,8 @@ public class KillAura extends Module {
     private boolean fakeBlockState = false;
     private long attackDelayMS = 0L;
     public int blockTick = 0;
-    private boolean swapped = false;
-    private boolean postBlock = false;
-    private boolean postSwap = false;
     private int testAttackTick = 0;
 
-    // PredictAB state — 预判敌方攻击并自动格挡
-    // 0=IDLE  1=BLOCKING  2=RECOVER
     private int predictState = 0;
     private int predictTick = 0;
     private float predictPrevSwing = 0.0f;
@@ -127,10 +112,10 @@ public class KillAura extends Module {
         this.sort = new ModeProperty("Sort", 0, new String[]{"Distance", "Health", "Hurt Time", "FOV"});
 
         this.autoBlock = new ModeProperty(
-                "AutoBlock", 0, new String[]{"None", "Vanilla", "Hypixel", "Legit", "Fake", "Hypixel Test", "Hypixel Custom", "Predict"}
+                "AutoBlock", 0, new String[]{"None", "Hypixel", "Legit", "Fake", "Predict"}
         );
         this.hypixelMode = new ModeProperty(
-                "HypixelMode", 0, new String[]{"OldHypixel", "Without NoSlow", "Custom", "Lag"}, () -> this.autoBlock.getValue() == 2
+                "HypixelMode", 0, new String[]{"OldHypixel", "Without NoSlow", "Custom", "Lag"}, () -> this.autoBlock.getValue() == 1
         );
         this.autoBlockRequirePress = new BooleanProperty("AutoBlock Require Press", false);
         this.autoBlockCPS = new IntProperty("AutoBlock Aps", 10, 1, 20);
@@ -160,7 +145,6 @@ public class KillAura extends Module {
         this.golems = new BooleanProperty("Golems", false);
         this.silverfish = new BooleanProperty("Silverfish", false);
         this.teams = new BooleanProperty("Teams", true);
-        this.showTarget = new ModeProperty("Show Target", 0, new String[]{"None", "Default", "Hud"});
     }
 
     private long getAttackDelay() {
@@ -245,23 +229,18 @@ public class KillAura extends Module {
             } else if ((ItemUtil.isEating() || ItemUtil.isUsingBow()) && PlayerUtil.isUsingItem()) {
                 return false;
             } else {
-                AutoHeal autoHeal = (AutoHeal) Elara.moduleManager.getModule(AutoHeal.class);
-                if (autoHeal.isEnabled() && autoHeal.isSwitching()) {
+                BedBreaker bedBreaker = (BedBreaker) Elara.moduleManager.getModule(BedBreaker.class);
+                AutoBlockIn autoBlockIn = (AutoBlockIn) Elara.moduleManager.getModule(AutoBlockIn.class);
+                if (bedBreaker.isEnabled() && bedBreaker.isReady()) {
                     return false;
+                } else if (Elara.moduleManager.getModule(Scaffold.class).isEnabled()) {
+                    return false;
+                } else if (autoBlockIn.isEnabled()) {
+                    return false;
+                } else if (this.requirePress.getValue()) {
+                    return PlayerUtil.isAttacking();
                 } else {
-                    BedBreaker bedBreaker = (BedBreaker) Elara.moduleManager.getModule(BedBreaker.class);
-                    AutoBlockIn autoBlockIn = (AutoBlockIn) Elara.moduleManager.getModule(AutoBlockIn.class);
-                    if (bedBreaker.isEnabled() && bedBreaker.isReady()) {
-                        return false;
-                    } else if (Elara.moduleManager.getModule(Scaffold.class).isEnabled()) {
-                        return false;
-                    } else if (autoBlockIn.isEnabled()) {
-                        return false;
-                    } else if (this.requirePress.getValue()) {
-                        return PlayerUtil.isAttacking();
-                    } else {
-                        return !this.allowMining.getValue() || !mc.objectMouseOver.typeOfHit.equals(MovingObjectType.BLOCK) || !PlayerUtil.isAttacking();
-                    }
+                    return !this.allowMining.getValue() || !mc.objectMouseOver.typeOfHit.equals(MovingObjectType.BLOCK) || !PlayerUtil.isAttacking();
                 }
             }
         } else {
@@ -288,15 +267,6 @@ public class KillAura extends Module {
                 );
     }
 
-    /**
-     * PredictAB — 预判敌方攻击
-     *
-     * 多路径检测，任一命中即触发格挡：
-     * 1. Swing 上升沿：敌方挥剑动画起手的瞬间（最快视觉反应）
-     * 2. HurtTime 确认：已被命中（确认型，用于校准预判周期）
-     * 3. 冷却预判：基于上次攻击间隔，预测下一次攻击窗口
-     * 4. 近距离威胁：敌方面对自己且在极近距离、刚结束无敌帧
-     */
     private boolean predictEnemyAttack(EntityLivingBase target) {
         if (target == null) {
             predictPrevHurtTime = mc.thePlayer.hurtTime;
@@ -312,14 +282,12 @@ public class KillAura extends Module {
             float angleBetween = RotationUtil.angleToEntity(target);
             boolean facingUs = angleBetween <= 90.0f;
 
-            // PATH 1: Swing 上升沿 — 敌方刚起手挥剑
             boolean swingRising = spPrev <= 0.05f && sp > 0.05f;
             if (swingRising && facingUs && dist <= 4.5) {
                 predictLastAttackTick = mc.thePlayer.ticksExisted;
                 result = true;
             }
 
-            // PATH 2: HurtTime 确认 — 刚被命中
             if (!result) {
                 int curHurt = mc.thePlayer.hurtTime;
                 if (curHurt > 0 && predictPrevHurtTime == 0 && dist <= 4.5) {
@@ -328,7 +296,6 @@ public class KillAura extends Module {
                 }
             }
 
-            // PATH 3: 冷却预判 — 基于上次攻击时间预测下一次（1.8 剑冷却约 12.5 tick）
             if (!result && predictLastAttackTick > 0) {
                 int ticksSince = mc.thePlayer.ticksExisted - predictLastAttackTick;
                 if (ticksSince >= 10 && ticksSince <= 14 && facingUs && dist <= 4.0) {
@@ -336,7 +303,6 @@ public class KillAura extends Module {
                 }
             }
 
-            // PATH 4: 近距离威胁 — 敌方面对自己、距离极近、刚结束无敌帧
             if (!result && facingUs && dist <= 3.5
                     && target.hurtResistantTime >= 7 && target.hurtResistantTime <= 12) {
                 result = true;
@@ -439,21 +405,23 @@ public class KillAura extends Module {
         }
         return result;
     }
+
     public boolean isOldHypixel() {
-        return this.autoBlock.getValue() == 2 && this.hypixelMode.getValue() == 0;
+        return this.autoBlock.getValue() == 1 && this.hypixelMode.getValue() == 0;
     }
 
     public boolean isHypixelWithoutNoSlow() {
-        return this.autoBlock.getValue() == 2 && this.hypixelMode.getValue() == 1;
+        return this.autoBlock.getValue() == 1 && this.hypixelMode.getValue() == 1;
     }
 
     public boolean isHypixelCustom() {
-        return this.autoBlock.getValue() == 2 && this.hypixelMode.getValue() == 2;
+        return this.autoBlock.getValue() == 1 && this.hypixelMode.getValue() == 2;
     }
 
     public boolean isLag() {
-        return this.autoBlock.getValue() == 2 && this.hypixelMode.getValue() == 3;
+        return this.autoBlock.getValue() == 1 && this.hypixelMode.getValue() == 3;
     }
+
     public boolean isAttackAllowed() {
         Scaffold scaffold = (Scaffold) Elara.moduleManager.getModule(Scaffold.class);
         if (scaffold.isEnabled()) {
@@ -469,38 +437,29 @@ public class KillAura extends Module {
 
     public boolean shouldAutoBlock() {
         if (this.isPlayerBlocking() && this.isBlocking) {
-            return !mc.thePlayer.isInWater() && !mc.thePlayer.isInLava() && (this.autoBlock.getValue() == 2 || this.autoBlock.getValue() == 3 || this.autoBlock.getValue() == 5 || this.autoBlock.getValue() == 6 || this.autoBlock.getValue() == 7);
+            return !mc.thePlayer.isInWater() && !mc.thePlayer.isInLava() && (this.autoBlock.getValue() == 1 || this.autoBlock.getValue() == 2 || this.autoBlock.getValue() == 4);
         } else {
             return false;
         }
     }
+
     public boolean knockbackCanReduce(int phase, int tick) {
         switch (this.autoBlock.getValue()) {
             case 0:
-            case 1:
-            case 4:
+            case 3:
                 return true;
-            case 2:
+            case 1:
                 switch (this.hypixelMode.getValue()) {
                     case 0:
                     case 1:
                         return phase == 2 ? tick == 2 : tick == 0;
-                    case 2: {
-                        int maxT = Math.max(1, this.maxTick.getValue() - 1);
-                        switch (phase) {
-                            case 0:
-                                return tick == this.attackTick.getValue();
-                            case 1:
-                                return tick == this.attackTick.getValue() % maxT;
-                            default:
-                                return tick == (this.attackTick.getValue() - 2 + maxT) % maxT;
-                        }
-                    }
+                    case 2:
+                        return false;
                     case 3:
                     default:
                         return false;
                 }
-            case 3:
+            case 2:
                 return phase == 2 ? tick == 1 : tick == 0;
             default:
                 return true;
@@ -630,12 +589,8 @@ public class KillAura extends Module {
                                                 swap = true;
                                             }
                                             this.blockTick = 1;
-                                            // Keep attack enabled this tick so when we finish
-                                            // the block-start packet we can strike next tick.
                                             break;
                                         case 1:
-                                            // Transition to unblock state; attack still enabled
-                                            // so on next tick's evaluation we will actually hit.
                                             if (this.isPlayerBlocking()) {
                                                 this.stopBlock();
                                             }
@@ -644,8 +599,6 @@ public class KillAura extends Module {
                                             }
                                             break;
                                         case 2:
-                                            // Unblock completed last tick; it's safe to attack.
-                                            // Do NOT force attack=false here.
                                             if (this.attackDelayMS <= 50L) {
                                                 this.blockTick = 0;
                                             }
@@ -664,126 +617,6 @@ public class KillAura extends Module {
                             }
                             break;
                         case 4:
-                            Elara.blinkManager.setBlinkState(false, BlinkModules.AUTO_BLOCK);
-                            this.isBlocking = false;
-                            this.fakeBlockState = this.hasValidTarget();
-                            if (PlayerUtil.isUsingItem()
-                                    && !this.isPlayerBlocking()
-                                    && !Elara.playerStateManager.digging
-                                    && !Elara.playerStateManager.placing) {
-                                swap = true;
-                            }
-                            break;
-                        case 5:
-                            if (this.hasValidTarget()) {
-                                if (!Elara.playerStateManager.digging && !Elara.playerStateManager.placing) {
-                                    switch (this.blockTick) {
-                                        case 0:
-                                            blocked = true;
-                                            if (!this.isPlayerBlocking()) {
-                                                swap = true;
-                                            }
-                                            this.blockTick = 1;
-                                            break;
-                                        case 1:
-                                            if (isPlayerBlocking()) {
-                                                int randomSlot = new Random().nextInt(9);
-                                                while (randomSlot == mc.thePlayer.inventory.currentItem) {
-                                                    randomSlot = new Random().nextInt(9);
-                                                }
-                                                PacketUtil.sendPacket(new C09PacketHeldItemChange(randomSlot));
-                                                PacketUtil.sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
-                                            }
-                                            attack = false;
-                                            blockTick = 2;
-                                            break;
-                                        case 2:
-                                            attack = false;
-                                            this.stopBlock();
-                                            if (this.attackDelayMS <= 50L) {
-                                                this.blockTick = 0;
-                                            }
-                                            break;
-                                        default:
-                                            this.blockTick = 0;
-                                    }
-                                }
-                                this.isBlocking = true;
-                                this.fakeBlockState = true;
-                            } else {
-                                Elara.blinkManager.setBlinkState(false, BlinkModules.AUTO_BLOCK);
-                                int randomSlot = new Random().nextInt(9);
-                                while (randomSlot == mc.thePlayer.inventory.currentItem) {
-                                    randomSlot = new Random().nextInt(9);
-                                }
-                                PacketUtil.sendPacket(new C09PacketHeldItemChange(randomSlot));
-                                PacketUtil.sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
-                                this.isBlocking = false;
-                                this.fakeBlockState = false;
-                            }
-                            break;
-                        case 6:
-                            if (this.hasValidTarget()) {
-                                if (!Elara.playerStateManager.digging && !Elara.playerStateManager.placing) {
-                                    if (blockTick + 1 == startBlinkTick.getValue()) {
-                                        blocked = true;
-                                    }
-                                    if (blockTick + 1 != attackTick.getValue()) {
-                                        attack = false;
-                                    }
-                                    if (blockTick + 1 == startBlockTick.getValue()) {
-                                        if (!this.isPlayerBlocking()) {
-                                            swap = true;
-                                            if (postStartBlock.getValue()) postBlock = true;
-                                        }
-                                    }
-                                    if (blockTick + 1 == stopBlinkTick.getValue()) {
-                                        Elara.blinkManager.setBlinkState(false, BlinkModules.AUTO_BLOCK);
-                                    }
-                                    if (blockTick + 1 == swapTick.getValue()) {
-                                        int randomSlot = new Random().nextInt(9);
-                                        while (randomSlot == mc.thePlayer.inventory.currentItem) {
-                                            randomSlot = new Random().nextInt(9);
-                                        }
-                                        PacketUtil.sendPacket(new C09PacketHeldItemChange(randomSlot));
-                                        swapped = true;
-                                    }
-                                    if (blockTick + 1 == switchBackTick.getValue()) {
-                                        if (swapped) {
-                                            PacketUtil.sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
-                                            swapped = false;
-                                        }
-                                    }
-                                    if (blockTick + 1 == stopBlockTick.getValue()) {
-                                        if (this.isPlayerBlocking()) {
-                                            this.stopBlock();
-                                        }
-                                    }
-                                    blockTick++;
-                                    if (blockTick >= maxTick.getValue() - 1) {
-                                        blockTick = 0;
-                                    }
-                                }
-                                this.isBlocking = true;
-                                this.fakeBlockState = true;
-                            } else {
-                                if (swapped) {
-                                    PacketUtil.sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
-                                    swapped = false;
-                                }
-                                Elara.blinkManager.setBlinkState(false, BlinkModules.AUTO_BLOCK);
-                                this.isBlocking = false;
-                                this.fakeBlockState = false;
-                            }
-                            break;
-                        case 7:
-                            // ──────────────────────────────────────────────────────────
-                            // Predict AutoBlock (Rewrite v2 · 三态状态机)
-                            //
-                            // 0=IDLE       无威胁 → 正常攻击
-                            // 1=BLOCKING   预判敌方攻击 → 格挡，不攻击
-                            // 2=RECOVER    危险窗口结束 → 释放格挡，允许反击
-                            // ──────────────────────────────────────────────────────────
                             if (this.hasValidTarget() && this.target != null) {
                                 EntityLivingBase t = this.target.getEntity();
                                 boolean incoming = predictEnemyAttack(t);
@@ -791,7 +624,7 @@ public class KillAura extends Module {
 
                                 if (!Elara.playerStateManager.digging && !Elara.playerStateManager.placing) {
                                     switch (predictState) {
-                                        case 0: // IDLE
+                                        case 0:
                                             if (incoming) {
                                                 predictState = 1;
                                                 predictTick = 0;
@@ -804,11 +637,10 @@ public class KillAura extends Module {
                                             }
                                             break;
 
-                                        case 1: // BLOCKING — 格挡中，不攻击
+                                        case 1:
                                             this.isBlocking = true;
                                             attack = false;
                                             predictTick++;
-                                            // 危险窗口结束 或 达到最大格挡时间 → 释放
                                             if (!incoming || predictTick >= predictHoldTicks.getValue()) {
                                                 predictState = 2;
                                                 predictTick = 0;
@@ -816,12 +648,11 @@ public class KillAura extends Module {
                                             }
                                             break;
 
-                                        case 2: // RECOVER — 释放格挡，允许反击
+                                        case 2:
                                             this.isBlocking = false;
                                             predictTick++;
                                             if (predictTick >= 1) {
                                                 if (incoming) {
-                                                    // 仍有威胁 → 重新格挡
                                                     predictState = 1;
                                                     predictTick = 0;
                                                     if (!this.isPlayerBlocking()) swap = true;
@@ -857,9 +688,15 @@ public class KillAura extends Module {
                 }
                 boolean attacked = false;
                 if (this.isBoxInSwingRange(this.target.getBox())) {
-                    if (this.rotations.getValue() == 2 || this.rotations.getValue() == 3) {
+                    if (this.rotations.getValue() == 1 || this.rotations.getValue() == 2 || this.rotations.getValue() == 3) {
+                        EntityLivingBase targetEntity = this.target.getEntity();
+                        AxisAlignedBB predictedBox = this.target.getBox().offset(
+                                targetEntity.motionX * 0.5,
+                                targetEntity.motionY * 0.3,
+                                targetEntity.motionZ * 0.5
+                        );
                         float[] rotations = RotationUtil.getRotationsToBox(
-                                this.target.getBox(),
+                                predictedBox,
                                 event.getYaw(),
                                 event.getPitch(),
                                 (float) this.angleStep.getValue() + RandomUtil.nextFloat(-5.0F, 5.0F),
@@ -881,7 +718,7 @@ public class KillAura extends Module {
                     if (attacked) {
                         this.interactAttack(event.getNewYaw(), event.getNewPitch());
                     } else {
-                        if (!postBlock) this.sendUseItem();
+                        this.sendUseItem();
                     }
                 }
                 if (blocked) {
@@ -891,21 +728,6 @@ public class KillAura extends Module {
             }
         }
         if (event.getType() == EventType.POST && this.isEnabled()) {
-            if (postSwap) {
-                int randomSlot = new Random().nextInt(9);
-                while (randomSlot == mc.thePlayer.inventory.currentItem) {
-                    randomSlot = new Random().nextInt(9);
-                }
-                PacketUtil.sendPacket(new C09PacketHeldItemChange(randomSlot));
-                mc.getNetHandler().addToSendQueue(new C17PacketCustomPayload("send", new PacketBuffer(Unpooled.buffer())));
-                PacketUtil.sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
-                this.stopBlock();
-                postSwap = false;
-            }
-            if (postBlock) {
-                sendUseItem();
-                postBlock = false;
-            }
         }
     }
 
@@ -1010,31 +832,6 @@ public class KillAura extends Module {
                     && RotationState.getPriority() == 1.0F
                     && MoveUtil.isForwardPressed()) {
                 MoveUtil.fixStrafe(RotationState.getSmoothedYaw());
-            }
-        }
-    }
-
-    @EventTarget
-    public void onRender(Render3DEvent event) {
-        if (this.isEnabled() && target != null) {
-            if (this.showTarget.getValue() != 0
-                    && TeamUtil.isEntityLoaded(this.target.getEntity())
-                    && this.isAttackAllowed()) {
-                Color color = new Color(-1);
-                switch (this.showTarget.getValue()) {
-                    case 1:
-                        if (this.target.getEntity().hurtTime > 0) {
-                            color = new Color(16733525);
-                        } else {
-                            color = new Color(5635925);
-                        }
-                        break;
-                    case 2:
-                        color = ((HUD) Elara.moduleManager.getModule(HUD.class)).getColor(System.currentTimeMillis());
-                }
-                RenderUtil.enableRenderState();
-                RenderUtil.drawEntityBox(this.target.getEntity(), color.getRed(), color.getGreen(), color.getBlue());
-                RenderUtil.disableRenderState();
             }
         }
     }

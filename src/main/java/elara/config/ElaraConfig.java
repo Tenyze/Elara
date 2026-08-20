@@ -30,8 +30,6 @@ public class ElaraConfig extends cc.polyfrost.oneconfig.config.Config {
    public cc.polyfrost.oneconfig.gui.pages.Page profilesPage;
    @Page(name = "HUD", description = "Elara HUD settings", location = PageLocation.TOP)
    public cc.polyfrost.oneconfig.gui.pages.Page hudPage;
-   @Page(name = "Music", description = "In-game music player", location = PageLocation.TOP)
-   public cc.polyfrost.oneconfig.gui.pages.Page musicPlayerPage;
    @Page(name = "Debug", description = "Developer tools and debugging", location = PageLocation.TOP)
    public cc.polyfrost.oneconfig.gui.pages.Page debugPage;
    @HUD(name = "Music HUD", category = "Music")
@@ -113,12 +111,23 @@ public class ElaraConfig extends cc.polyfrost.oneconfig.config.Config {
       }
 
       try {
+         this.registerUpdateLog();
+      } catch (Throwable e) {
+         System.err.println("[Elara] UpdateLog init failed: " + e.getMessage());
+      }
+
+      try {
          LinkedHashMap<String, OptionCategory> cats = this.mod.defaultPage.categories;
          OptionCategory homeCat = cats.remove("Home");
+         OptionCategory updateCat = cats.remove("Update");
          OptionCategory generalCat = cats.remove("General");
          LinkedHashMap<String, OptionCategory> reordered = new LinkedHashMap<>();
          if (homeCat != null) {
             reordered.put("Home", homeCat);
+         }
+
+         if (updateCat != null) {
+            reordered.put("Update", updateCat);
          }
 
          if (generalCat != null) {
@@ -162,13 +171,6 @@ public class ElaraConfig extends cc.polyfrost.oneconfig.config.Config {
       } catch (Throwable e) {
          System.err.println("[Elara] MusicPlayerManager init failed: " + e);
       }
-
-      try {
-         Class<?> pageClass = Class.forName("elara.config.gui.MusicPlayerPage");
-         this.musicPlayerPage = (cc.polyfrost.oneconfig.gui.pages.Page) pageClass.getConstructor().newInstance();
-      } catch (Throwable e) {
-         System.err.println("[Elara] MusicPlayerPage init failed: " + e);
-      }
    }
 
    private void initDebugPage() {
@@ -189,6 +191,16 @@ public class ElaraConfig extends cc.polyfrost.oneconfig.config.Config {
       }
    }
 
+   private void registerUpdateLog() {
+      try {
+         Class<?> optClass = Class.forName("elara.config.gui.UpdateLog");
+         Object opt = optClass.getConstructor().newInstance();
+         OptionSubcategory sub = ConfigUtils.getSubCategory(this.mod.defaultPage, "Update", "Changelog");
+         sub.options.add(0, (BasicOption)opt);
+      } catch (Throwable var4) {
+      }
+   }
+
    public static void init() {
       if (INSTANCE == null) {
          try {
@@ -199,4 +211,4 @@ public class ElaraConfig extends cc.polyfrost.oneconfig.config.Config {
          }
       }
    }
-}
+} 

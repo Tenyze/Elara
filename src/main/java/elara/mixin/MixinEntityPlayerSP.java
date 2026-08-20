@@ -11,7 +11,6 @@ import elara.events.SlowDownEvent;
 import elara.events.UpdateEvent;
 import elara.management.RotationState;
 import elara.module.misc.AntiDebuff;
-import elara.module.exploit.NoSlow;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.BlockPos;
@@ -159,12 +158,15 @@ public abstract class MixinEntityPlayerSP extends MixinEntityPlayer {
             )
     )
     private boolean isUsing(EntityPlayerSP entityPlayerSP) {
-        NoSlow noSlow = (NoSlow) Elara.moduleManager.modules.get(NoSlow.class);
-        if (!noSlow.isEnabled()) return entityPlayerSP.isUsingItem();
-        if (noSlow.isSwordActive() || noSlow.isFoodActive() || noSlow.isBowActive()) {
-            return false;
+        boolean using = entityPlayerSP.isUsingItem();
+        if (using && Elara.moduleManager != null) {
+            SlowDownEvent event = new SlowDownEvent(1.0F, 1.0F);
+            EventManager.call(event);
+            if (event.isStopped()) {
+                return false;
+            }
         }
-        return entityPlayerSP.isUsingItem();
+        return using;
     }
 
     @Redirect(

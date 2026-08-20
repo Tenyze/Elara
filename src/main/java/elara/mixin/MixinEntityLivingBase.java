@@ -5,7 +5,6 @@ import elara.event.EventManager;
 import elara.events.SlowDownEvent;
 import elara.events.StrafeEvent;
 import elara.management.RotationState;
-import elara.module.movement.Jesus;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
@@ -66,13 +65,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     )
     private float moveEntityWithHeading(float float1) {
         if ((EntityLivingBase) ((Object) this) instanceof EntityPlayerSP && float1 == (float) EnchantmentHelper.getDepthStriderModifier((EntityLivingBase) ((Object) this))) {
-            if (Elara.moduleManager == null) {
-                return float1;
-            }
-            Jesus jesus = (Jesus) Elara.moduleManager.modules.get(Jesus.class);
-            if (jesus.isEnabled() && (!jesus.groundOnly.getValue() || this.onGround)) {
-                return Math.max(float1, jesus.speed.getValue());
-            }
+            // Jesus 模块已移除，保留 hook 位置以便后续扩展
         }
         return float1;
     }
@@ -87,7 +80,10 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
         if ((EntityLivingBase) ((Object) this) instanceof EntityPlayerSP) {
             SlowDownEvent event = new SlowDownEvent(forward, forward);
             EventManager.call(event);
-            return event.forward;
+            if (event.isStopped()) {
+                return forward;
+            }
+            return forward * (event.getForwardMultiplier() / 0.2F);
         }
         return forward;
     }

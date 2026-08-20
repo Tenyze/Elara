@@ -1,4 +1,4 @@
-package elara.module.utility;
+package elara.module.movement;
 
 import com.google.common.base.CaseFormat;
 import elara.Elara;
@@ -10,6 +10,8 @@ import elara.events.TickEvent;
 import elara.events.UpdateEvent;
 import elara.mixin.IAccessorC0DPacketCloseWindow;
 import elara.module.Module;
+import elara.module.ModuleCategory;
+import elara.module.movement.inventorymove.bypass.InventoryMoveModes;
 import elara.property.properties.BooleanProperty;
 import elara.property.properties.IntProperty;
 import elara.property.properties.ModeProperty;
@@ -32,8 +34,21 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class InvWalk extends Module {
+public class InventoryMove extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
+
+    public static final String[] MODE_LIST = new String[]{
+            "Normal", "BufferAbuse", "Cancel", "Grim2", "Watchdog"
+    };
+
+    public final ModeProperty mode = new ModeProperty("Mode", 0, MODE_LIST);
+    public final BooleanProperty guiEnabled = new BooleanProperty("click-gui", true);
+    public final IntProperty openDelay = new IntProperty("open-delay", 0, 0, 20, () -> mode.getValue() == 0);
+    public final IntProperty closeDelay = new IntProperty("close-delay", 4, 0, 20, () -> mode.getValue() == 0);
+    public final BooleanProperty lockMoveKey = new BooleanProperty("lock-move-dey", false, () -> mode.getValue() == 0);
+
+    private final InventoryMoveModes bypass = new InventoryMoveModes(this);
+
     private final Queue<C0EPacketClickWindow> clickQueue = new ConcurrentLinkedQueue<>();
     private boolean keysPressed = false;
     private C16PacketClientStatus pendingStatus = null;
@@ -50,27 +65,15 @@ public class InvWalk extends Module {
         put(mc.gameSettings.keyBindSprint, false);
     }};
 
-    public final ModeProperty mode = new ModeProperty("mode", 1, new String[]{"VANILLA", "LEGIT", "HYPIXEL", "LEGIT+"});
-    public final BooleanProperty guiEnabled = new BooleanProperty("click-gui", true);
-    public final IntProperty openDelay = new IntProperty("open-delay", 0, 0, 20, () -> mode.getValue() == 3);
-    public final IntProperty closeDelay = new IntProperty("close-delay", 4, 0, 20, () -> mode.getValue() == 3);
-    public final BooleanProperty lockMoveKey = new BooleanProperty("lock-move-dey", false);
-
-    public InvWalk() {
-        super("InvWalk", false);
-
-        mode.setCategory("Other");
-        guiEnabled.setCategory("Conditions");
-        openDelay.setCategory("Timing");
-        closeDelay.setCategory("Timing");
-        lockMoveKey.setCategory("Conditions");
+    public InventoryMove() {
+        super("InventoryMove", false, false, "", ModuleCategory.MOVEMENT);
     }
 
     public void pressMovementKeys(boolean skipSneak) {
         this.movementKeys.keySet().stream()
                 .filter(key -> !skipSneak || key != mc.gameSettings.keyBindSneak)
                 .forEach(key -> KeyBindUtil.updateKeyState(key.getKeyCode()));
-        if (Elara.moduleManager.modules.get(elara.module.movement.Sprint.class).isEnabled()) {
+        if (Elara.moduleManager.getModule(Sprint.class).isEnabled()) {
             KeyBindUtil.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
         }
         this.keysPressed = true;
@@ -92,7 +95,7 @@ public class InvWalk extends Module {
         for (Map.Entry<KeyBinding, Boolean> keyBinding : movementKeys.entrySet()) {
             KeyBindUtil.setKeyBindState(keyBinding.getKey().getKeyCode(), keyBinding.getValue());
         }
-        if (Elara.moduleManager.modules.get(elara.module.movement.Sprint.class).isEnabled()) {
+        if (Elara.moduleManager.getModule(Sprint.class).isEnabled()) {
             KeyBindUtil.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
         }
         this.keysPressed = true;
@@ -101,21 +104,7 @@ public class InvWalk extends Module {
     public boolean canInvWalk() {
         if (!(mc.currentScreen instanceof GuiContainer)) return false;
         if (mc.currentScreen instanceof GuiContainerCreative) return false;
-
-        switch (this.mode.getValue()) {
-            case 0: // Vanilla
-                return true;
-            case 1: // Legit
-                if (!(mc.currentScreen instanceof GuiInventory)) return false;
-                return this.pendingStatus != null && this.clickQueue.isEmpty();
-            case 2: // Hypixel
-                return this.delayTicks == 0 && this.clickQueue.isEmpty();
-            case 3: // Legit+
-                if (!(mc.currentScreen instanceof GuiInventory)) return false;
-                return this.closeDelayTicks == -1 && this.clickQueue.isEmpty();
-            default:
-                return false;
-        }
+        return true;
     }
 
     public boolean temporaryStackIsEmpty() {
@@ -163,52 +152,49 @@ public class InvWalk extends Module {
             return;
         }
 
-        if (this.canInvWalk()) {
-            if (this.isSetMovementKeys() && this.lockMoveKey.getValue()) {
-                this.restoreMovementKeys();
+        if (this.mode.getValue() == 0) {
+            if (this.canInvWalk()) {
+                if (this.isSetMovementKeys() && this.lockMoveKey.getValue()) {
+                    this.restoreMovementKeys();
+                } else {
+                    this.pressMovementKeys(true);
+                }
             } else {
-                this.pressMovementKeys(true);
+                if (this.keysPressed) {
+                    if (mc.currentScreen != null) {
+                        KeyBinding.unPressAllKeys();
+                    } else if (this.isSetMovementKeys()) {
+                        this.resetMovementKeys();
+                        this.pressMovementKeys(false);
+                    }
+                    this.keysPressed = false;
+                }
+                if (this.pendingStatus != null) {
+                    PacketUtil.sendPacketNoEvent(this.pendingStatus);
+                    this.pendingStatus = null;
+                }
+                if (this.delayTicks > 0) {
+                    this.delayTicks--;
+                }
             }
         } else {
-            if (this.keysPressed) {
-                if (mc.currentScreen != null) {
-                    KeyBinding.unPressAllKeys();
-                } else if (this.isSetMovementKeys()) {
-                    this.resetMovementKeys();
-                    this.pressMovementKeys(false);
-                }
-                this.keysPressed = false;
-            }
-            if (this.pendingStatus != null) {
-                PacketUtil.sendPacketNoEvent(this.pendingStatus);
-                this.pendingStatus = null;
-            }
-            if (this.delayTicks > 0) {
-                this.delayTicks--;
-            }
+            bypass.onUpdate(event);
         }
     }
 
     @EventTarget
     public void onPacket(PacketEvent event) {
-        if (!this.isEnabled() || event.getType() != EventType.SEND) return;
+        if (!this.isEnabled()) return;
 
-        if (event.getPacket() instanceof C16PacketClientStatus) {
-            this.storeMovementKeys();
-            if (this.mode.getValue() == 1 || this.mode.getValue() == 3) {
-                C16PacketClientStatus packet = (C16PacketClientStatus) event.getPacket();
-                if (packet.getStatus() == EnumState.OPEN_INVENTORY_ACHIEVEMENT) {
-                    event.setCancelled(true);
-                    if (this.mode.getValue() == 1){
-                        this.pendingStatus = packet;
-                    }
-                }
-            }
-        } else if (!(event.getPacket() instanceof C0EPacketClickWindow)) {
-            if (event.getPacket() instanceof C0DPacketCloseWindow) {
-                C0DPacketCloseWindow packet = (C0DPacketCloseWindow) event.getPacket();
-                if (((IAccessorC0DPacketCloseWindow) packet).getWindowId() == 0) {
-                    if (this.mode.getValue() == 3) {
+        if (this.mode.getValue() == 0) {
+            if (event.getType() != EventType.SEND) return;
+
+            if (event.getPacket() instanceof C16PacketClientStatus) {
+                this.storeMovementKeys();
+            } else if (!(event.getPacket() instanceof C0EPacketClickWindow)) {
+                if (event.getPacket() instanceof C0DPacketCloseWindow) {
+                    C0DPacketCloseWindow packet = (C0DPacketCloseWindow) event.getPacket();
+                    if (((IAccessorC0DPacketCloseWindow) packet).getWindowId() == 0) {
                         if (!this.clickQueue.isEmpty()) {
                             this.clickQueue.clear();
                         }
@@ -217,77 +203,40 @@ public class InvWalk extends Module {
                         }
                         if (this.closeDelayTicks >= 0) {
                             this.closeDelayTicks = -1;
-                        } else {
-                            event.setCancelled(true);
                         }
-                    } else if (this.pendingStatus != null) {
-                        this.pendingStatus = null;
+                    } else {
+                        if (!this.clickQueue.isEmpty()) {
+                            this.clickQueue.clear();
+                        }
+                        if (this.openDelayTicks >= 0) {
+                            this.openDelayTicks = -1;
+                        }
+                        if (this.closeDelayTicks >= 0) {
+                            this.closeDelayTicks = -1;
+                        }
+                    }
+                }
+            } else {
+                C0EPacketClickWindow packet = (C0EPacketClickWindow) event.getPacket();
+                if (packet.getWindowId() == 0) {
+                    if ((packet.getMode() == 3 || packet.getMode() == 4) && packet.getSlotId() == -999) {
                         event.setCancelled(true);
+                        return;
                     }
-                } else {
-                    if (!this.clickQueue.isEmpty()) {
-                        this.clickQueue.clear();
-                    }
-                    if (this.openDelayTicks >= 0) {
-                        this.openDelayTicks = -1;
-                    }
-                    if (this.closeDelayTicks >= 0) {
-                        this.closeDelayTicks = -1;
-                    }
+                }
+                if (this.pendingStatus != null) {
+                    PacketUtil.sendPacketNoEvent(this.pendingStatus);
+                    this.pendingStatus = null;
                 }
             }
         } else {
-            C0EPacketClickWindow packet = (C0EPacketClickWindow) event.getPacket();
-            switch (this.mode.getValue()) {
-                case 1: // Legit
-                    if (packet.getWindowId() == 0) {
-                        if ((packet.getMode() == 3 || packet.getMode() == 4) && packet.getSlotId() == -999) {
-                            event.setCancelled(true);
-                            return;
-                        }
-                        if (this.pendingStatus != null) {
-                            KeyBinding.unPressAllKeys();
-                            event.setCancelled(true);
-                            this.clickQueue.offer(packet);
-                        }
-                    }
-                    break;
-                case 2: // Hypixel
-                    if ((packet.getMode() == 3 || packet.getMode() == 4) && packet.getSlotId() == -999) {
-                        event.setCancelled(true);
-                    } else {
-                        KeyBinding.unPressAllKeys();
-                        event.setCancelled(true);
-                        this.clickQueue.offer(packet);
-                        this.delayTicks = 8;
-                    }
-                    break;
-                case 3: // Legit+
-                    if (packet.getWindowId() == 0) { // inventory
-                        if ((packet.getMode() == 3 || packet.getMode() == 4) && packet.getSlotId() == -999) {
-                            event.setCancelled(true);
-                            return;
-                        }
-                        KeyBinding.unPressAllKeys();
-                        event.setCancelled(true);
-                        this.clickQueue.offer(packet);
-                        if (this.closeDelayTicks < 0 && this.openDelayTicks < 0){
-                            this.pendingStatus = new C16PacketClientStatus(EnumState.OPEN_INVENTORY_ACHIEVEMENT);
-                            this.openDelayTicks = openDelay.getValue();
-                        }
-                        this.closeDelayTicks = closeDelay.getValue();
-                    }
-                    break;
-            }
-            if (this.pendingStatus != null) {
-                PacketUtil.sendPacketNoEvent(this.pendingStatus);
-                this.pendingStatus = null;
-            }
+            bypass.onPacket(event);
         }
     }
 
     @Override
     public void onDisabled() {
+        bypass.onDisable();
         if (this.keysPressed) {
             if (mc.currentScreen != null) {
                 KeyBinding.unPressAllKeys();
@@ -299,10 +248,13 @@ public class InvWalk extends Module {
             this.pendingStatus = null;
         }
         this.delayTicks = 0;
+        while (!this.clickQueue.isEmpty()) {
+            PacketUtil.sendPacketNoEvent(this.clickQueue.poll());
+        }
     }
 
     @Override
     public String[] getSuffix() {
-        return new String[]{CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, this.mode.getModeString())};
+        return new String[]{mode.getModeString()};
     }
 }

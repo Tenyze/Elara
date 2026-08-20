@@ -11,7 +11,6 @@ import elara.module.Module;
 import elara.module.combat.KillAura;
 import elara.module.movement.LongJump;
 import elara.module.movement.Fly;
-import elara.module.movement.Speed;
 import elara.util.*;
 import elara.property.properties.*;
 import elara.property.properties.BooleanProperty;
@@ -37,10 +36,9 @@ public class TargetStrafe extends Module {
 
     private boolean canStrafe() {
         if (this.speedOnly.getValue()) {
-            Speed speed = (Speed) Elara.moduleManager.modules.get(Speed.class);
             Fly fly = (Fly) Elara.moduleManager.modules.get(Fly.class);
             LongJump longJump = (LongJump) Elara.moduleManager.modules.get(LongJump.class);
-            if (!speed.isEnabled() && !fly.isEnabled() && (!longJump.isEnabled() || !longJump.isJumping())) {
+            if (!fly.isEnabled() && (!longJump.isEnabled() || !longJump.isJumping())) {
                 return false;
             }
         }

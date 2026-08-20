@@ -2,7 +2,6 @@ package elara.mixin;
 
 import elara.Elara;
 import elara.module.misc.AntiObbyTrap;
-import elara.module.movement.Jesus;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
@@ -26,12 +25,7 @@ public abstract class MixinWorld {
             )
     )
     private boolean handleMaterialAcceleration(Entity entity) {
-        if (entity instanceof EntityPlayerSP && Elara.moduleManager != null) {
-            Jesus jesus = (Jesus) Elara.moduleManager.modules.get(Jesus.class);
-            if (jesus.isEnabled() && jesus.noPush.getValue()) {
-                return false;
-            }
-        }
+        // Jesus 模块已移除，保留 isPushedByWater 默认行为
         return entity.isPushedByWater();
     }
 

@@ -43,3 +43,8 @@ client.run.bat
 # Keystores / secrets
 *.jks
 *.keystore
+
+# Local development environment
+.trae/
+build_log.txt
+.trae-cn/

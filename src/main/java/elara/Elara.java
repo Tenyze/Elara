@@ -78,7 +78,6 @@ public class Elara {
         moduleManager.modules.put(AntiVoid.class, new AntiVoid());
         moduleManager.modules.put(AutoClicker.class, new AutoClicker());
         moduleManager.modules.put(AutoAnduril.class, new AutoAnduril());
-        moduleManager.modules.put(elara.module.combat.AutoHeal.class, new elara.module.combat.AutoHeal());
         moduleManager.modules.put(AutoTool.class, new AutoTool());
         moduleManager.modules.put(BedBreaker.class, new BedBreaker());
         moduleManager.modules.put(BedESP.class, new BedESP());
@@ -101,11 +100,9 @@ public class Elara {
         moduleManager.modules.put(HUD.class, new HUD());
         moduleManager.modules.put(MoreKB.class, new MoreKB());
         moduleManager.modules.put(Indicators.class, new Indicators());
+        moduleManager.modules.put(InventoryMove.class, new InventoryMove());
         moduleManager.modules.put(InvManager.class, new InvManager());
-        moduleManager.modules.put(InvWalk.class, new InvWalk());
         moduleManager.modules.put(ItemESP.class, new ItemESP());
-        moduleManager.modules.put(Jesus.class, new Jesus());
-        moduleManager.modules.put(KeepSprint.class, new KeepSprint());
         moduleManager.modules.put(Clutch.class, new Clutch());
         moduleManager.modules.put(HitBox.class, new HitBox());
         moduleManager.modules.put(Displace.class, new Displace());
@@ -123,6 +120,8 @@ public class Elara {
         moduleManager.modules.put(NoJumpDelay.class, new NoJumpDelay());
         moduleManager.modules.put(NoRotate.class, new NoRotate());
         moduleManager.modules.put(NoSlow.class, new NoSlow());
+        moduleManager.modules.put(Velocity.class, new Velocity());
+        moduleManager.modules.put(KeepSprint.class, new KeepSprint());
         moduleManager.modules.put(PotionHUD.class, new PotionHUD());
 
         moduleManager.modules.put(Reach.class, new Reach());
@@ -131,7 +130,6 @@ public class Elara {
         moduleManager.modules.put(ShaderESP.class, new ShaderESP());
         moduleManager.modules.put(ItemGlow.class, new ItemGlow());
         moduleManager.modules.put(Spammer.class, new Spammer());
-        moduleManager.modules.put(Speed.class, new Speed());
         moduleManager.modules.put(Scaffold.class, new Scaffold());
         moduleManager.modules.put(SpeedMine.class, new SpeedMine());
         moduleManager.modules.put(Sprint.class, new Sprint());
@@ -153,17 +151,14 @@ public class Elara {
         moduleManager.modules.put(AutoBlockIn.class, new AutoBlockIn());
         moduleManager.modules.put(BlinkSettings.class, new BlinkSettings());
         moduleManager.modules.put(InventoryClicker.class, new InventoryClicker());
-        moduleManager.modules.put(SmartAttack.class, new SmartAttack());
 
         moduleManager.modules.put(FakeLag.class, new FakeLag());
         moduleManager.modules.put(FastBow.class, new FastBow());
         moduleManager.modules.put(FlagDetector.class, new FlagDetector());
         moduleManager.modules.put(HackerDetector.class, new HackerDetector());
         moduleManager.modules.put(Hitflick.class, new Hitflick());
-        moduleManager.modules.put(KnockbackDelay.class, new KnockbackDelay());
         moduleManager.modules.put(Piercing.class, new Piercing());
         moduleManager.modules.put(ServerLag.class, new ServerLag());
-        moduleManager.modules.put(SprintReset.class, new SprintReset());
         moduleManager.modules.put(Stasis.class, new Stasis());
         moduleManager.modules.put(Timer.class, new Timer());
         moduleManager.modules.put(SuperKnockback.class, new SuperKnockback());
@@ -236,6 +231,8 @@ public class Elara {
 
         try {
             elara.config.ElaraConfig.init();
+            elara.config.NotificationConfig.init();
+            elara.config.music.MusicConfig.init();
         } catch (Throwable t) {
             System.err.println("[Elara] OneConfig init failed: " + t);
         }

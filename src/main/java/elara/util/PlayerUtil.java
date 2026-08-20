@@ -1,7 +1,8 @@
 package elara.util;
 
 import elara.Elara;
-import elara.module.movement.KeepSprint;
+import elara.event.EventManager;
+import elara.events.HitSlowDownEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockAir;
 import net.minecraft.client.Minecraft;
@@ -178,20 +179,13 @@ public class PlayerUtil {
                                     0.1,
                                     MathHelper.cos(mc.thePlayer.rotationYaw * (float) Math.PI / 180.0F) * (float) knockbackLevel * 0.5F
                             );
-                            KeepSprint keepSprint = (KeepSprint) Elara.moduleManager.modules.get(KeepSprint.class);
-                            boolean canKeepSprint = keepSprint != null && keepSprint.isEnabled()
-                                    && keepSprint.shouldKeepSprint()
-                                    && (!keepSprint.groundOnly.getValue() || mc.thePlayer.onGround)
-                                    && (!keepSprint.reachOnly.getValue() || !(RotationUtil.distanceToEntity(target) <= 3.0));
-                            if (canKeepSprint) {
-                                mc.thePlayer.motionX *= 0.6 + 0.4 * (1.0 - keepSprint.slowdown.getValue().doubleValue() / 100.0);
-                                mc.thePlayer.motionZ *= 0.6 + 0.4 * (1.0 - keepSprint.slowdown.getValue().doubleValue() / 100.0);
-                            } else {
-                                mc.thePlayer.motionX *= 0.6;
-                                mc.thePlayer.motionZ *= 0.6;
-                                if (keepSprint != null && keepSprint.isEnabled()) {
-                                    mc.thePlayer.setSprinting(false);
-                                }
+                            HitSlowDownEvent event = new HitSlowDownEvent();
+                            EventManager.call(event);
+                            double slow = event.getSlowDown();
+                            mc.thePlayer.motionX *= slow;
+                            mc.thePlayer.motionZ *= slow;
+                            if (!event.isSprint()) {
+                                mc.thePlayer.setSprinting(false);
                             }
                         }
                         if (target instanceof EntityPlayerMP && target.velocityChanged) {

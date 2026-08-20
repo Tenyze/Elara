@@ -2,94 +2,95 @@ package elara.config.gui;
 
 import cc.polyfrost.oneconfig.config.elements.BasicOption;
 import cc.polyfrost.oneconfig.renderer.NanoVGHelper;
-import cc.polyfrost.oneconfig.renderer.font.Font;
 import cc.polyfrost.oneconfig.renderer.font.Fonts;
 import cc.polyfrost.oneconfig.utils.InputHandler;
 import elara.Elara;
 import elara.module.Module;
 
 public class HomeContentOption extends BasicOption {
-   private static final int CONTENT_WIDTH = 992;
+    private static final int PAD_X = 24;
+    private static final int CONTENT_W = 960;
 
-   public HomeContentOption() {
-      super(null, null, "", "", "Home", "About", 2);
-   }
+    public HomeContentOption() {
+        super(null, null, "", "", "Home", "About", 2);
+    }
 
-   private float centerTextY(float boxY, float boxH, float fontSize, Font font) {
-      return boxY + (boxH - fontSize) / 2.0F + fontSize * 0.75F;
-   }
+    @Override
+    public void draw(long vg, int x, int y, InputHandler inputHandler) {
+        NanoVGHelper nvg = NanoVGHelper.INSTANCE;
 
-   public void draw(long vg, int x, int y, InputHandler inputHandler) {
-      NanoVGHelper nvg = NanoVGHelper.INSTANCE;
-      int totalModules = Elara.moduleManager != null ? Elara.moduleManager.modules.size() : 0;
-      int enabledModules = 0;
-      if (Elara.moduleManager != null) {
-         for (Module m : Elara.moduleManager.modules.values()) {
-            if (m.isEnabled()) {
-               enabledModules++;
+        int totalModules = Elara.moduleManager != null ? Elara.moduleManager.modules.size() : 0;
+        int enabledModules = 0;
+        if (Elara.moduleManager != null) {
+            for (Module m : Elara.moduleManager.modules.values()) {
+                if (m.isEnabled()) enabledModules++;
             }
-         }
-      }
+        }
 
-      int cy = y;
-      nvg.drawText(vg, "ABOUT", x + 16, cy + 4, ElaraColors.accentDim(), 11.0F, Fonts.BOLD);
-      float var10003 = x + 16;
-      cy += 24;
-      nvg.drawText(vg, "Elara Client", var10003, cy + 32, ElaraColors.WHITE, 32.0F, Fonts.BOLD);
-      nvg.drawText(vg, "A Minecraft 1.8.9 Forge PvP Client", x + 16, cy + 60, ElaraColors.white60(), 14.0F, Fonts.MEDIUM);
-      int rowH = 28;
-      float var10002 = x;
-      cy += 92;
-      nvg.drawRoundedRect(vg, var10002, cy, 992.0F, 64.0F, ElaraColors.GRAY_800, 8.0F);
-      float verY = this.centerTextY(cy + 4, rowH, 12.0F, Fonts.MEDIUM);
-      nvg.drawText(vg, "Version", x + 20, verY, ElaraColors.white60(), 12.0F, Fonts.MEDIUM);
-      float verValY = this.centerTextY(cy + 4, rowH, 14.0F, Fonts.MEDIUM);
-      nvg.drawText(vg, Elara.version, x + 160, verValY, ElaraColors.WHITE, 14.0F, Fonts.MEDIUM);
-      float authY = this.centerTextY(cy + 36, rowH, 12.0F, Fonts.MEDIUM);
-      nvg.drawText(vg, "Author", x + 20, authY, ElaraColors.white60(), 12.0F, Fonts.MEDIUM);
-      float authValY = this.centerTextY(cy + 36, rowH, 14.0F, Fonts.MEDIUM);
-      nvg.drawText(vg, "Tenyze", x + 160, authValY, ElaraColors.WHITE, 14.0F, Fonts.MEDIUM);
-      var10003 = x + 16;
-      cy += 80;
-      nvg.drawText(vg, "MODULES", var10003, cy + 4, ElaraColors.accentDim(), 11.0F, Fonts.BOLD);
-      int cardW = 320;
-      int cardGap = 16;
-      int cardH = 72;
-      cy += 24;
-      this.drawStatCard(vg, x, cy, cardW, cardH, "Total Modules", String.valueOf(totalModules));
-      this.drawStatCard(vg, x + cardW + cardGap, cy, cardW, cardH, "Enabled", String.valueOf(enabledModules));
-      this.drawStatCard(vg, x + (cardW + cardGap) * 2, cy, cardW, cardH, "Categories", "5");
-      int var31;
-      nvg.drawText(vg, "CREDITS", x + 16, (var31 = cy + cardH + 24) + 4, ElaraColors.accentDim(), 11.0F, Fonts.BOLD);
-      cy = var31 + 24;
+        int leftX = x + PAD_X;
+        float cy = y + 8;
 
-      for (String[] pair : new String[][]{
-         {"Based on", "Minecraft Forge 1.8.9"}, {"UI Framework", "OneConfig by Polyfrost"}, {"Special Thanks", "To all contributors and testers"}
-      }) {
-         int creditH = 44;
-         nvg.drawRoundedRect(vg, x, cy, 992.0F, creditH, ElaraColors.GRAY_800, 6.0F);
-         float labelY = this.centerTextY(cy, creditH, 13.0F, Fonts.MEDIUM);
-         nvg.drawText(vg, pair[0], x + 20, labelY, ElaraColors.white60(), 13.0F, Fonts.MEDIUM);
-         float valY = this.centerTextY(cy, creditH, 14.0F, Fonts.MEDIUM);
-         nvg.drawText(vg, pair[1], x + 200, valY, ElaraColors.WHITE, 14.0F, Fonts.MEDIUM);
-         cy += creditH + 8;
-      }
+        // ---------- Header ----------
+        nvg.drawText(vg, "HOME", leftX, cy + 12, ElaraColors.accentDim(), 11F, Fonts.BOLD);
+        cy += 30;
+        nvg.drawText(vg, "Elara Client", leftX, cy + 36, ElaraColors.WHITE, 36F, Fonts.BOLD);
+        cy += 36 + 8;
+        nvg.drawText(vg, "A minimal Minecraft 1.8.9 PvP client — made for clean games.",
+                leftX, cy + 14, ElaraColors.white60(), 14F, Fonts.MEDIUM);
+        cy += 14 + 24;
+        nvg.drawLine(vg, leftX, cy, leftX + CONTENT_W, cy, 1F, ElaraColors.GRAY_600);
+        cy += 28;
 
-      var10003 = x + 16;
-      cy += 8;
-      nvg.drawText(vg, "© 2025 Elara Client. All rights reserved.", var10003, cy, ElaraColors.white30(), 12.0F, Fonts.MEDIUM);
-   }
+        // ---------- Stats row (3 cards) ----------
+        int cardW = (CONTENT_W - 32) / 3;
+        int cardH = 88;
+        int gap = 16;
+        drawStatCard(vg, x, (int) cy, cardW, cardH,
+                "Total modules", String.valueOf(totalModules));
+        drawStatCard(vg, x + cardW + gap, (int) cy, cardW, cardH,
+                "Enabled", String.valueOf(enabledModules));
+        drawStatCard(vg, x + (cardW + gap) * 2, (int) cy, cardW, cardH,
+                "Categories", "5");
+        cy += cardH + 24;
 
-   private void drawStatCard(long vg, int x, int y, int w, int h, String label, String value) {
-      NanoVGHelper nvg = NanoVGHelper.INSTANCE;
-      nvg.drawRoundedRect(vg, x, y, w, h, ElaraColors.GRAY_800, 8.0F);
-      float labelY = this.centerTextY(y + 8, 24.0F, 13.0F, Fonts.MEDIUM);
-      nvg.drawText(vg, label, x + 20, labelY, ElaraColors.white60(), 13.0F, Fonts.MEDIUM);
-      float valY = this.centerTextY(y + 32, 32.0F, 24.0F, Fonts.BOLD);
-      nvg.drawText(vg, value, x + 20, valY, ElaraColors.WHITE, 24.0F, Fonts.BOLD);
-   }
+        // ---------- Info card ----------
+        int infoH = 72;
+        nvg.drawRoundedRect(vg, x, cy, CONTENT_W, infoH, ElaraColors.GRAY_800, 8F);
+        nvg.drawText(vg, "Version",  leftX + 4, cy + 24 + 14, ElaraColors.white60(), 12F, Fonts.MEDIUM);
+        nvg.drawText(vg, "Author",   leftX + 4, cy + 24 + 14 + 30, ElaraColors.white60(), 12F, Fonts.MEDIUM);
+        nvg.drawText(vg, Elara.version, leftX + 144, cy + 24 + 14, ElaraColors.WHITE, 14F, Fonts.MEDIUM);
+        nvg.drawText(vg, "Tenyze",      leftX + 144, cy + 24 + 14 + 30, ElaraColors.WHITE, 14F, Fonts.MEDIUM);
+        cy += infoH + 24;
 
-   public int getHeight() {
-      return 540;
-   }
+        // ---------- Credits ----------
+        nvg.drawText(vg, "CREDITS", leftX, cy + 12, ElaraColors.accentDim(), 11F, Fonts.BOLD);
+        cy += 30;
+        String[][] rows = new String[][]{
+                {"Based on",         "Minecraft Forge 1.8.9"},
+                {"UI Framework",     "OneConfig by Polyfrost"},
+                {"Special Thanks",   "To all contributors and testers"},
+        };
+        for (String[] row : rows) {
+            int h = 40;
+            nvg.drawRoundedRect(vg, x, cy, CONTENT_W, h, ElaraColors.GRAY_800, 6F);
+            nvg.drawText(vg, row[0], leftX + 4, cy + 14 + 12, ElaraColors.white60(), 13F, Fonts.MEDIUM);
+            nvg.drawText(vg, row[1], leftX + 180, cy + 14 + 13, ElaraColors.WHITE, 14F, Fonts.MEDIUM);
+            cy += h + 8;
+        }
+        cy += 16;
+        nvg.drawText(vg, "© 2025 Elara Client — All rights reserved.",
+                leftX, cy + 12, ElaraColors.white30(), 12F, Fonts.MEDIUM);
+    }
+
+    private static void drawStatCard(long vg, int x, int y, int w, int h, String label, String value) {
+        NanoVGHelper nvg = NanoVGHelper.INSTANCE;
+        nvg.drawRoundedRect(vg, x, y, w, h, ElaraColors.GRAY_800, 8F);
+        nvg.drawText(vg, label, x + 18, y + 16 + 13, ElaraColors.white60(), 13F, Fonts.MEDIUM);
+        nvg.drawText(vg, value, x + 18, y + 16 + 13 + 32, ElaraColors.WHITE, 26F, Fonts.BOLD);
+    }
+
+    @Override
+    public int getHeight() {
+        return 560;
+    }
 }

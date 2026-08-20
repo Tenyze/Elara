@@ -1,6 +1,6 @@
 package elara.module.misc;
 
-import elara.Elara;
+import elara.config.NotificationConfig;
 import elara.config.NotificationHelper;
 import elara.event.EventTarget;
 import elara.event.types.EventType;
@@ -10,7 +10,6 @@ import elara.events.TickEvent;
 import elara.module.Module;
 import elara.module.ModuleCategory;
 import elara.property.properties.BooleanProperty;
-import elara.property.properties.FloatProperty;
 import net.minecraft.block.BlockAir;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -21,65 +20,60 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * HackerDetector — ported from Raven BS Anticheat.
- * Detects cheaters by monitoring player behavior and alerts via NotificationHelper.
- */
 public class HackerDetector extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
-    public final FloatProperty flagInterval = new FloatProperty("flag-interval", 20.0F, 0.0F, 60.0F);
+    // 检测开关属性（flagInterval 和 playSound 已移除，由 NotificationConfig 管理）
     public final BooleanProperty detectAutoBlock = new BooleanProperty("AutoBlock", true);
     public final BooleanProperty detectNoFall = new BooleanProperty("NoFall", true);
     public final BooleanProperty detectNoSlow = new BooleanProperty("NoSlow", true);
     public final BooleanProperty detectScaffold = new BooleanProperty("Scaffold", true);
     public final BooleanProperty detectLegitScaffold = new BooleanProperty("Legit-Scaffold", true);
     public final BooleanProperty ignoreTeammates = new BooleanProperty("ignore-teammates", false);
-    public final BooleanProperty playSound = new BooleanProperty("play-sound", true);
 
     private final Map<UUID, PlayerData> players = new HashMap<>();
     private final Map<UUID, Map<String, Long>> flags = new HashMap<>();
-    private long lastAlert = 0L;
     private long lastClientBoundPacket = 0L;
 
     public HackerDetector() {
         super("HackerDetector", false, false, "Detects cheaters and alerts with red notification", ModuleCategory.MISC);
 
-        flagInterval.setCategory("Timing");
-        detectAutoBlock.setCategory("Other");
-        detectNoFall.setCategory("Other");
-        detectNoSlow.setCategory("Other");
-        detectScaffold.setCategory("Other");
-        detectLegitScaffold.setCategory("Other");
+        detectAutoBlock.setCategory("Checks");
+        detectNoFall.setCategory("Checks");
+        detectNoSlow.setCategory("Checks");
+        detectScaffold.setCategory("Checks");
+        detectLegitScaffold.setCategory("Checks");
         ignoreTeammates.setCategory("Conditions");
-        playSound.setCategory("Display");
     }
 
     private void alert(EntityPlayer entityPlayer, String mode) {
+        if (NotificationConfig.INSTANCE == null) return;
+        if (!NotificationConfig.INSTANCE.enabled || !NotificationConfig.INSTANCE.hackerDetectorEnabled) {
+            return;
+        }
         if (ignoreTeammates.getValue() && isTeammate(entityPlayer)) {
             return;
         }
+
         long currentTime = System.currentTimeMillis();
-        if (flagInterval.getValue() > 0.0F) {
-            Map<String, Long> playerFlags = flags.get(entityPlayer.getUniqueID());
-            if (playerFlags == null) {
-                playerFlags = new HashMap<>();
-            } else {
-                Long lastFlag = playerFlags.get(mode);
-                if (lastFlag != null && (currentTime - lastFlag) <= (long) (flagInterval.getValue() * 1000.0F)) {
-                    return;
-                }
+        int cooldownSeconds = NotificationConfig.INSTANCE.hackerDetectorCooldown;
+
+        if (cooldownSeconds > 0) {
+            Map<String, Long> playerFlags = flags.computeIfAbsent(entityPlayer.getUniqueID(), k -> new HashMap<>());
+            Long lastFlag = playerFlags.get(mode);
+            if (lastFlag != null && (currentTime - lastFlag) <= (long) cooldownSeconds * 1000L) {
+                return;
             }
             playerFlags.put(mode, currentTime);
-            flags.put(entityPlayer.getUniqueID(), playerFlags);
         }
 
         String message = entityPlayer.getName() + " - " + mode;
         NotificationHelper.sendError("Hacker Detected!", message);
 
-        if (playSound.getValue() && (currentTime - lastAlert) >= 1500L) {
-            mc.thePlayer.playSound("note.pling", 1.0F, 1.0F);
-            lastAlert = currentTime;
+        if (NotificationConfig.INSTANCE.hackerDetectorSound) {
+            try {
+                mc.thePlayer.playSound("note.pling", 1.0F, 1.0F);
+            } catch (Exception ignored) {}
         }
     }
 
@@ -133,6 +127,7 @@ public class HackerDetector extends Module {
     public void onLoadWorld(LoadWorldEvent event) {
         players.clear();
         flags.clear();
+        lastClientBoundPacket = 0L;
     }
 
     private void performCheck(EntityPlayer entityPlayer, PlayerData playerData) {
@@ -219,20 +214,17 @@ public class HackerDetector extends Module {
     public void onEnabled() {
         players.clear();
         flags.clear();
-        lastAlert = 0L;
+        lastClientBoundPacket = 0L;
     }
 
     @Override
     public void onDisabled() {
         players.clear();
         flags.clear();
-        lastAlert = 0L;
+        lastClientBoundPacket = 0L;
     }
 
-    /**
-     * PlayerData — ported from Raven BS PlayerData.
-     * Tracks per-player behavior for cheat detection.
-     */
+    // ----- PlayerData 内部类 -----
     private static class PlayerData {
         double speed;
         int aboveVoidTicks;

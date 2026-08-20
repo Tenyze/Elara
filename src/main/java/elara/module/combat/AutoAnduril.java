@@ -6,7 +6,7 @@ import elara.event.types.EventType;
 import elara.event.types.Priority;
 import elara.events.TickEvent;
 import elara.module.Module;
-import elara.module.utility.InvWalk;
+import elara.module.movement.InventoryMove;
 import elara.property.properties.BooleanProperty;
 import elara.property.properties.IntProperty;
 import elara.util.ItemUtil;
@@ -47,9 +47,9 @@ public class AutoAnduril extends Module {
             if (currentItem.getItem() instanceof ItemBlock && mc.gameSettings.keyBindUseItem.isKeyDown()) return false;
             if (!(currentItem.getItem() instanceof ItemSword) && mc.thePlayer.isUsingItem()) return false;
         }
-        InvWalk invWalk = (InvWalk) Elara.moduleManager.modules.get(InvWalk.class);
+        InventoryMove inventoryMove = (InventoryMove) Elara.moduleManager.modules.get(InventoryMove.class);
         return mc.currentScreen == null || mc.currentScreen instanceof elara.ui.ClickGui
-                || invWalk.isEnabled() && invWalk.canInvWalk();
+                || inventoryMove.isEnabled() && inventoryMove.canInvWalk();
     }
 
     public boolean hasSpeed() {

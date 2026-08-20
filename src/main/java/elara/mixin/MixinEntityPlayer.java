@@ -1,20 +1,36 @@
 package elara.mixin;
 
 import elara.Elara;
+import elara.event.EventManager;
+import elara.events.HitSlowDownEvent;
 import elara.module.combat.Knockback;
-import elara.module.movement.KeepSprint;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SideOnly(Side.CLIENT)
 @Mixin(value = {EntityPlayer.class}, priority = 9999)
 public abstract class MixinEntityPlayer extends MixinEntityLivingBase {
+
+    @Unique
+    private HitSlowDownEvent hitSlowDownEvent;
+
+    @Inject(
+            method = {"attackTargetEntityWithCurrentItem"},
+            at = {@At("HEAD")}
+    )
+    private void onAttackTargetEntityWithCurrentItemHead(CallbackInfo callbackInfo) {
+        hitSlowDownEvent = new HitSlowDownEvent();
+        EventManager.call(hitSlowDownEvent);
+    }
 
     @ModifyConstant(
             method = {"attackTargetEntityWithCurrentItem"},
@@ -29,10 +45,10 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase {
         if (Knockback.blinkActive) {
             return 1.0;
         }
-        KeepSprint keepSprint = (KeepSprint) Elara.moduleManager.modules.get(KeepSprint.class);
-        return keepSprint.isEnabled() && keepSprint.isAttackNoSlow()
-                ? keepSprint.getSlowFactor()
-                : speed;
+        if (hitSlowDownEvent == null) {
+            return speed;
+        }
+        return hitSlowDownEvent.getSlowDown();
     }
 
     @Redirect(
@@ -47,10 +63,10 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase {
             if (Knockback.blinkActive) {
                 return;
             }
-            KeepSprint keepSprint = (KeepSprint) Elara.moduleManager.modules.get(KeepSprint.class);
-            if (!keepSprint.isEnabled() || !keepSprint.shouldKeepSprint()) {
-                entityPlayer.setSprinting(boolean2);
+            if (hitSlowDownEvent != null && hitSlowDownEvent.isSprint()) {
+                return;
             }
+            entityPlayer.setSprinting(boolean2);
         }
     }
 }

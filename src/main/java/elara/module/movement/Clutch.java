@@ -539,8 +539,21 @@ public class Clutch extends Module {
         return null;
     }
 
+    /**
+     * 检测 blockPos 是否位于玩家 2x2 落点区域（XZ 平面）正下方。
+     * 取玩家 ± 0.5 单元（2×2 格）覆盖的 4 个方块坐标，命中即视为"在脚下"。
+     */
     private boolean isBlockUnderPlayer(BlockPos blockPos, Vec3 pos) {
         if (blockPos.getY() >= MathHelper.floor_double(pos.yCoord)) return false;
+        // 2×2 块网格：分别向 X/Z 正负偏移各一格，覆盖 2x2 落点
+        for (int ox = -1; ox <= 0; ox++) {
+            for (int oz = -1; oz <= 0; oz++) {
+                int bx = MathHelper.floor_double(pos.xCoord + 0.5) + ox;
+                int bz = MathHelper.floor_double(pos.zCoord + 0.5) + oz;
+                if (blockPos.getX() == bx && blockPos.getZ() == bz) return true;
+            }
+        }
+        // 保留原始 4 角柱判定（玩家刚好在块中心或边界的兜底）
         for (double[] corner : CORNERS) {
             int cx = MathHelper.floor_double(pos.xCoord + corner[0]);
             int cz = MathHelper.floor_double(pos.zCoord + corner[1]);
@@ -694,18 +707,50 @@ public class Clutch extends Module {
     }
 
     /**
-     * 检测玩家脚下 within 格范围内（沿 4 个角柱）是否存在非空气方块支撑。
+     * 构建 2x2 落点网格（方块坐标）：基于玩家 XZ 位置 ±0.5 的 4 个方块，
+     * 加上原 4 角柱所在块做兜底去重。
+     */
+    private int[][] collectLandingCellXZs() {
+        // 先收集去重后的方块坐标
+        java.util.HashSet<Long> set = new java.util.HashSet<>();
+        int baseX = MathHelper.floor_double(mc.thePlayer.posX + 0.5);
+        int baseZ = MathHelper.floor_double(mc.thePlayer.posZ + 0.5);
+        // 2x2 网格
+        for (int ox = -1; ox <= 0; ox++) {
+            for (int oz = -1; oz <= 0; oz++) {
+                int bx = baseX + ox;
+                int bz = baseZ + oz;
+                set.add((long) bx << 32 | (bz & 0xffffffffL));
+            }
+        }
+        // 原 4 角柱
+        for (double[] corner : CORNERS) {
+            int cx = MathHelper.floor_double(mc.thePlayer.posX + corner[0]);
+            int cz = MathHelper.floor_double(mc.thePlayer.posZ + corner[1]);
+            set.add((long) cx << 32 | (cz & 0xffffffffL));
+        }
+        int[][] result = new int[set.size()][2];
+        int i = 0;
+        for (long k : set) {
+            result[i][0] = (int) (k >> 32);
+            result[i][1] = (int) k;
+            i++;
+        }
+        return result;
+    }
+
+    /**
+     * 检测玩家 2x2 落点区域下方 within 格范围内是否存在非空气方块支撑。
      * 用于上升初期判定是否安全，避免跳起来也触发 clutch 放置。
      */
     private boolean hasSolidGroundBeneath(double within) {
         int feetY = MathHelper.floor_double(mc.thePlayer.posY);
         int maxScan = Math.max(1, (int) Math.ceil(within));
+        int[][] cells = collectLandingCellXZs();
         for (int dy = 1; dy <= maxScan; dy++) {
             int checkY = feetY - dy;
-            for (double[] corner : CORNERS) {
-                int cx = MathHelper.floor_double(mc.thePlayer.posX + corner[0]);
-                int cz = MathHelper.floor_double(mc.thePlayer.posZ + corner[1]);
-                BlockPos pos = new BlockPos(cx, checkY, cz);
+            for (int[] cell : cells) {
+                BlockPos pos = new BlockPos(cell[0], checkY, cell[1]);
                 if (!canPlaceThrough(pos)) return true;
             }
         }
@@ -713,21 +758,21 @@ public class Clutch extends Module {
     }
 
     /**
-     * 玩家脚下实际空距（沿 4 角柱取最小），向下扫描 maxScan 格。
-     * 角柱下任一方块触地即视为该柱的空距。用于"几格高掉下去"的真实判定。
+     * 玩家 2x2 落点区域内实际空距（取所有探测柱的最小值），向下扫描 maxScan 格。
+     * 用于"几格高掉下去"的真实判定。
      */
     private double getAirBeneathFeet(int maxScan) {
         double feetY = mc.thePlayer.posY; // 玩家脚底板 Y
         double minAir = maxScan + 1.0;
-        for (double[] corner : CORNERS) {
-            int cx = MathHelper.floor_double(mc.thePlayer.posX + corner[0]);
-            int cz = MathHelper.floor_double(mc.thePlayer.posZ + corner[1]);
-            int feetBlock = MathHelper.floor_double(feetY - 0.001);
+        int[][] cells = collectLandingCellXZs();
+        int feetBlock = MathHelper.floor_double(feetY - 0.001);
+        for (int[] cell : cells) {
+            int cx = cell[0];
+            int cz = cell[1];
             boolean found = false;
             for (int dy = 0; dy < maxScan; dy++) {
                 BlockPos p = new BlockPos(cx, feetBlock - dy, cz);
                 if (!canPlaceThrough(p)) {
-                    // 从脚底板到该方块顶面的距离
                     double topY = (feetBlock - dy) + 1.0;
                     double d = feetY - topY;
                     if (d < minAir) minAir = d;
@@ -736,7 +781,6 @@ public class Clutch extends Module {
                 }
             }
             if (!found) {
-                // 此柱下 maxScan 格内无支撑，取最大值
                 if (maxScan < minAir) minAir = maxScan;
             }
         }

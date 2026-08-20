@@ -20,6 +20,7 @@ public class MusicHud extends Hud {
    private static final transient long ANIM_MS = 400L;
    private final transient float[] smoothedSpec = new float[16];
    private transient Float cachedMusicTextW;
+   private final transient java.util.HashMap<String, Float> titleWidthCache = new java.util.HashMap<>();
    @Switch(name = "Round Border", category = "Round", subcategory = "Appearance")
    public boolean roundBorder = true;
    @Slider(name = "Corner Radius", min = 0.0F, max = 20.0F, step = 0, category = "Round", subcategory = "Appearance")
@@ -120,12 +121,10 @@ public class MusicHud extends Hud {
 
                   float tx = MusicPlayerConfig.hudShowCover() ? x + 80.0F * scale : x + 12.0F * scale;
                   float mtw = MusicPlayerConfig.hudShowCover() ? 132.0F * scale : 196.0F * scale;
-                  String title = engine != null ? MusicLayout.fullClean(engine.getTitle()) : "No song";
                   float tfs = 12.0F * scale;
-                  float tw = nvg.getTextWidth(vg, title, tfs, Fonts.BOLD);
-                  if (tw > mtw) {
-                     tfs = Math.max(7.0F * scale, tfs * mtw / tw);
-                  }
+                  String rawTitle = engine != null ? MusicLayout.fullClean(engine.getTitle()) : "No song";
+                  // 对过长歌名做像素级截断 + 省略号，避免继续缩小字号导致过密的显示
+                  String title = MusicLayout.truncByWidth(vg, rawTitle, tfs, Fonts.BOLD, mtw, this.titleWidthCache);
 
                   nvg.drawText(vg, title, tx, y + 20.0F * scale, this.alpha(ElaraColors.WHITE, alpha), tfs, Fonts.BOLD);
                   if (MusicPlayerConfig.hudShowProgress()) {

@@ -12,8 +12,6 @@ import cc.polyfrost.oneconfig.renderer.NanoVGHelper;
 import cc.polyfrost.oneconfig.renderer.font.Fonts;
 import cc.polyfrost.oneconfig.utils.InputHandler;
 import cc.polyfrost.oneconfig.utils.color.ColorPalette;
-import elara.config.music.MusicPlayerConfig;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,13 +32,11 @@ public class ElaraHudPage extends Page {
 
     private static final String POTION_HUD = "Potion HUD";
     private static final String TARGET_HUD = "Target HUD";
-    private static final String MUSIC_HUD = "Music HUD";
     private static final String SESSION_HUD = "Session HUD";
-    private static final String[] CATEGORIES = new String[]{POTION_HUD, TARGET_HUD, MUSIC_HUD, SESSION_HUD};
+    private static final String[] CATEGORIES = new String[]{POTION_HUD, TARGET_HUD, SESSION_HUD};
 
     private final List<BasicOption> potionOptions = new ArrayList<>();
     private final List<BasicOption> targetOptions = new ArrayList<>();
-    private final List<BasicOption> musicOptions = new ArrayList<>();
     private final List<BasicOption> sessionOptions = new ArrayList<>();
     private final ArrayList<BasicButton> categoryButtons = new ArrayList<>();
     private boolean optionsBuilt = false;
@@ -73,7 +69,6 @@ public class ElaraHudPage extends Page {
     private void buildOptions() {
         this.potionOptions.clear();
         this.targetOptions.clear();
-        this.musicOptions.clear();
         this.sessionOptions.clear();
         ElaraConfig config = ElaraConfig.INSTANCE;
         if (config == null) {
@@ -131,33 +126,7 @@ public class ElaraHudPage extends Page {
             e.printStackTrace();
         }
 
-        // ---- Music HUD ----
-        try {
-            Hud hud = config.musicHud;
-            if (hud != null) {
-                // Mirror the saved MusicPlayerConfig values into the live static
-                // fields the HUD actually reads, so the toggles below (and the
-                // rendered HUD) always reflect persisted state.
-                ElaraHudPage.syncMusicHudFromConfig();
-                this.musicOptions.add(new HudToggleOption(hud, "Enabled"));
-                this.musicOptions.add(new MusicHudToggleOption("hudShowCover", "Show Cover", "Show album cover art"));
-                this.musicOptions.add(new MusicHudToggleOption("hudShowSpectrum", "Show Spectrum", "Show audio spectrum visualizer"));
-                this.musicOptions.add(new MusicHudToggleOption("hudShowProgress", "Show Progress Bar", "Show playback progress bar"));
-                this.musicOptions.add(new MusicHudToggleOption("hudHideWhenNotPlaying", "Hide When Not Playing", "Hide the HUD when no song is playing"));
-                // Blur settings
-                this.musicOptions.add(new ConfigSwitch(field(MusicHud.class, "blurBackground"), hud, "Blur Background", "Enable glassmorphism blur effect on background", "MusicHUD", "Appearance", 1));
-                this.musicOptions.add(new ConfigSlider(field(MusicHud.class, "blurRadius"), hud, "Blur Radius", "Blur strength (4~16 recommended)", "MusicHUD", "Appearance", 4f, 16f, 0));
-                // Round settings
-                this.musicOptions.add(new ConfigSwitch(field(MusicHud.class, "roundBorder"), hud, "Round Border", "Enable rounded corners", "MusicHUD", "Round", 1));
-                this.musicOptions.add(new ConfigSlider(field(MusicHud.class, "cornerRadius"), hud, "Corner Radius", "Rounded corner radius", "MusicHUD", "Round", 0f, 20f, 0));
-                this.musicOptions.add(new ConfigSwitch(field(MusicHud.class, "showOutline"), hud, "Show Outline", "Show border outline", "MusicHUD", "Round", 1));
-                this.musicOptions.add(new ConfigSlider(field(MusicHud.class, "outlineWidth"), hud, "Outline Width", "Width of border outline", "MusicHUD", "Round", 1f, 5f, 0));
-                this.musicOptions.add(new ConfigColorElement(field(MusicHud.class, "outlineColor"), hud, "Outline Color", "Color of border outline", "MusicHUD", "Round", 1, true));
-            }
-        } catch (Throwable e) {
-            System.err.println("[Elara] ElaraHudPage MusicHUD options failed: " + e);
-            e.printStackTrace();
-        }
+        // ---- Music HUD settings have been migrated to MusicPlayer Settings tab ----
 
         // ---- Session HUD ----
         try {
@@ -184,26 +153,9 @@ public class ElaraHudPage extends Page {
         }
     }
 
-    private static void syncMusicHudFromConfig() {
-        try {
-            MusicPlayerPage.hudShowCover = MusicPlayerConfig.hudShowCover();
-            MusicPlayerPage.hudShowSpectrum = MusicPlayerConfig.hudShowSpectrum();
-            MusicPlayerPage.hudShowProgress = MusicPlayerConfig.hudShowProgress();
-            MusicPlayerPage.hudHideWhenNotPlaying = MusicPlayerConfig.hudHideWhenNotPlaying();
-            MusicPlayerPage.hudScale = MusicPlayerConfig.hudScale();
-            MusicPlayerPage.hudPosX = MusicPlayerConfig.hudPosX();
-            MusicPlayerPage.hudPosY = MusicPlayerConfig.hudPosY();
-        } catch (Throwable ignored) {
-            // MusicPlayerConfig not initialised yet — fall back to defaults.
-        }
-    }
-
     private List<BasicOption> currentOptions() {
         if (TARGET_HUD.equals(this.selectedCategory)) {
             return this.targetOptions;
-        }
-        if (MUSIC_HUD.equals(this.selectedCategory)) {
-            return this.musicOptions;
         }
         if (SESSION_HUD.equals(this.selectedCategory)) {
             return this.sessionOptions;
@@ -331,72 +283,6 @@ public class ElaraHudPage extends Page {
         public void draw(long vg, int x, int y, InputHandler inputHandler) {
             NanoVGHelper nvg = NanoVGHelper.INSTANCE;
             boolean enabled = hud.isEnabled();
-            this.button.setToggled(enabled);
-            nvg.drawText(vg, this.name, (float) x, (float) (y + 17), this.nameColor, 14.0f, Fonts.MEDIUM);
-            this.button.setText(enabled ? "ON" : "OFF");
-            this.button.draw(vg, (float) (x + 224), (float) y, inputHandler);
-        }
-
-        @Override
-        public int getHeight() {
-            return 32;
-        }
-    }
-
-    /**
-     * A toggle bound to one of {@link MusicPlayerPage}'s static HUD flags
-     * (e.g. {@code hudShowCover}). Flipping it updates the live static field
-     * the {@link MusicHud} reads, then persists the whole HUD setting block
-     * through {@link MusicPlayerConfig#saveHudSettings}, mirroring the
-     * save path used by the in-page toggles in {@code MusicPlayerPage}.
-     */
-    private static class MusicHudToggleOption extends BasicOption {
-        private final String fieldName;
-        private final BasicButton button;
-
-        MusicHudToggleOption(String fieldName, String name, String description) {
-            super(null, null, name, description, "MusicHUD", "Display", 1);
-            this.fieldName = fieldName;
-            this.button = new BasicButton(64, 32, "", 2, ColorPalette.SECONDARY);
-            this.button.setToggleable(true);
-            this.button.setClickAction(this::toggle);
-        }
-
-        private boolean getValue() {
-            try {
-                Field f = MusicPlayerPage.class.getField(this.fieldName);
-                return f.getBoolean(null);
-            } catch (Exception e) {
-                return false;
-            }
-        }
-
-        private void toggle() {
-            boolean next = !this.getValue();
-            try {
-                Field f = MusicPlayerPage.class.getField(this.fieldName);
-                f.setBoolean(null, next);
-            } catch (Exception e) {
-                System.err.println("[Elara] MusicHudToggleOption set failed: " + e);
-            }
-            try {
-                MusicPlayerConfig.saveHudSettings(
-                        MusicPlayerPage.hudShowCover,
-                        MusicPlayerPage.hudShowSpectrum,
-                        MusicPlayerPage.hudShowProgress,
-                        MusicPlayerPage.hudHideWhenNotPlaying,
-                        MusicPlayerPage.hudScale,
-                        MusicPlayerPage.hudPosX,
-                        MusicPlayerPage.hudPosY);
-            } catch (Throwable ignored) {
-                // MusicPlayerConfig not available — value still updates live.
-            }
-        }
-
-        @Override
-        public void draw(long vg, int x, int y, InputHandler inputHandler) {
-            NanoVGHelper nvg = NanoVGHelper.INSTANCE;
-            boolean enabled = this.getValue();
             this.button.setToggled(enabled);
             nvg.drawText(vg, this.name, (float) x, (float) (y + 17), this.nameColor, 14.0f, Fonts.MEDIUM);
             this.button.setText(enabled ? "ON" : "OFF");

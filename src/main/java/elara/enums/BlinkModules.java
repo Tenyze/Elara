@@ -1,5 +1,7 @@
 package elara.enums;
 
+import elara.module.combat.BlockHit;
+
 public enum BlinkModules {
     NONE,
     ANTI_VOID,
@@ -10,5 +12,6 @@ public enum BlinkModules {
     LAG_RANGE,
     KNOCKBACK,
     HITFLICK,
-    DISPLACE
+    DISPLACE,
+    BlockHit;
 }

@@ -1,5 +1,6 @@
 package elara.config.gui;
 
+import cc.polyfrost.oneconfig.config.core.OneColor;
 import cc.polyfrost.oneconfig.gui.elements.BasicButton;
 import cc.polyfrost.oneconfig.gui.elements.text.TextInputField;
 import cc.polyfrost.oneconfig.gui.pages.Page;
@@ -300,36 +301,58 @@ public class MusicPlayerPage extends Page {
         MusicEngine engine = MusicPlayerManager.getEngine();
         int cy = y + 40 + 32;
         int contentX = x + 20;
-        int COVER_SIZE = 220;
-        int COVER_X = contentX;
-        int COVER_Y = cy;
+
+        // ---- Hero card ----
+        int cardX = contentX;
+        int cardW = 920;
+        int cardY = cy;
+        int cardH = 264;
+        nvg.drawRoundedRect(vg, (float)cardX, (float)cardY, (float)cardW, (float)cardH, ElaraColors.gray800Alpha(220), 18.0f);
+        nvg.drawRoundedRect(vg, (float)cardX, (float)cardY, 4.0f, (float)cardH, ElaraColors.accent(), 2.0f);
+
+        int COVER_SIZE = 200;
+        int COVER_X = cardX + 28;
+        int COVER_Y = cardY + 32;
         String coverPath = null;
         if (engine != null && engine.getCurrentSong() != null) {
             coverPath = CoverManager.getCoverPath(engine.getCurrentSong());
         }
         if (coverPath != null) {
-            nvg.drawRoundImage(vg, coverPath, (float)COVER_X, (float)COVER_Y, 220.0f, 220.0f, 16.0f, null);
+            nvg.drawRoundImage(vg, coverPath, (float)COVER_X, (float)COVER_Y, 200.0f, 200.0f, 16.0f, null);
         } else {
-            nvg.drawRoundedRect(vg, (float)COVER_X, (float)COVER_Y, 220.0f, 220.0f, ElaraColors.GRAY_800, 16.0f);
-            float fontSize = 28.0f;
+            nvg.drawRoundedRect(vg, (float)COVER_X, (float)COVER_Y, 200.0f, 200.0f, ElaraColors.GRAY_800, 16.0f);
+            float fontSize = 26.0f;
             float musicW = this.tw(vg, "Music", fontSize, Fonts.MEDIUM);
-            float ty = this.centerTextY(COVER_Y, 220.0f, fontSize, Fonts.MEDIUM);
-            nvg.drawText(vg, "Music", (float)COVER_X + (220.0f - musicW) / 2.0f, ty, this.cachedIsPlaying ? ElaraColors.accent() : ElaraColors.GRAY_300, fontSize, Fonts.MEDIUM);
+            float ty = this.centerTextY(COVER_Y, 200.0f, fontSize, Fonts.MEDIUM);
+            nvg.drawText(vg, "Music", (float)COVER_X + (200.0f - musicW) / 2.0f, ty, this.cachedIsPlaying ? ElaraColors.accent() : ElaraColors.GRAY_300, fontSize, Fonts.MEDIUM);
         }
-        int INFO_X = COVER_X + 220 + 48;
-        int INFO_W = 652;
-        nvg.drawText(vg, "NOW PLAYING", (float)INFO_X, (float)(cy + 16), ElaraColors.accentDim(), 12.0f, Fonts.BOLD);
-        nvg.drawText(vg, this.cachedTitle, (float)INFO_X, (float)(cy + 48), -1, 26.0f, Fonts.BOLD);
-        nvg.drawText(vg, this.cachedArtist, (float)INFO_X, (float)(cy + 80), ElaraColors.white60(), 16.0f, Fonts.MEDIUM);
-        int BAR_Y = cy + 128;
-        int BAR_W = 652;
-        int BAR_H = 6;
+        if (this.cachedIsPlaying) {
+            nvg.drawHollowRoundRect(vg, (float)(COVER_X - 4), (float)(COVER_Y - 4), 208.0f, 208.0f, ElaraColors.accent(), 20.0f, 2.0f);
+        }
+
+        int INFO_X = COVER_X + COVER_SIZE + 36;
+        int INFO_W = cardX + cardW - INFO_X - 28;
+
+        String np = "NOW PLAYING";
+        float npW = this.tw(vg, np, 11.0f, Fonts.BOLD);
+        nvg.drawRoundedRect(vg, (float)INFO_X, (float)(cardY + 34), npW + 22.0f, 22.0f, ElaraColors.accentDim(), 11.0f);
+        nvg.drawText(vg, np, (float)(INFO_X + 11), this.centerTextY(cardY + 34, 22.0f, 11.0f, Fonts.BOLD), ElaraColors.WHITE, 11.0f, Fonts.BOLD);
+
         if (this.cachedIsDownloading) {
             String bufferingText = "Buffering... " + (int)(this.cachedDownloadProgress * 100.0f) + "%";
             float bw = this.tw(vg, bufferingText, 12.0f, Fonts.MEDIUM);
-            nvg.drawText(vg, bufferingText, (float)(INFO_X + 652) - bw, (float)(cy + 20), ElaraColors.accent(), 12.0f, Fonts.MEDIUM);
+            nvg.drawText(vg, bufferingText, (float)(cardX + cardW - 28) - bw, (float)(cardY + 40), ElaraColors.accent(), 12.0f, Fonts.MEDIUM);
         }
-        boolean barHovered = inputHandler.isAreaHovered((float)INFO_X, (float)(BAR_Y - 8), 652.0f, 22.0f);
+
+        String title = MusicLayout.truncByWidth(vg, this.cachedTitle, 26.0f, Fonts.BOLD, (float)INFO_W, this.textWidthCache);
+        nvg.drawText(vg, title, (float)INFO_X, (float)(cardY + 88), -1, 26.0f, Fonts.BOLD);
+        String artist = MusicLayout.truncByWidth(vg, this.cachedArtist, 15.0f, Fonts.MEDIUM, (float)INFO_W, this.textWidthCache);
+        nvg.drawText(vg, artist, (float)INFO_X, (float)(cardY + 122), ElaraColors.white60(), 15.0f, Fonts.MEDIUM);
+
+        int BAR_Y = cardY + 156;
+        int BAR_W = INFO_W;
+        int BAR_H = 6;
+        boolean barHovered = inputHandler.isAreaHovered((float)INFO_X, (float)(BAR_Y - 8), (float)BAR_W, 22.0f);
         boolean barMouseDown = Platform.getMousePlatform().isButtonDown(0);
         if (barHovered && barMouseDown && !this.mouseWasDownProgress && this.cachedDuration > 0) {
             this.draggingProgress = true;
@@ -342,7 +365,7 @@ public class MusicPlayerPage extends Page {
         }
         this.mouseWasDownProgress = barMouseDown;
         if (this.draggingProgress) {
-            this.dragProgress = (inputHandler.mouseX() - (float)INFO_X) / 652.0f;
+            this.dragProgress = (inputHandler.mouseX() - (float)INFO_X) / (float)BAR_W;
             displayProgress = this.dragProgress = Math.max(0.0f, Math.min(1.0f, this.dragProgress));
         } else {
             displayProgress = this.smoothedProgress;
@@ -350,21 +373,22 @@ public class MusicPlayerPage extends Page {
         int displayPos = this.draggingProgress ? (int)(displayProgress * (float)this.cachedDuration) : this.cachedPosition;
         String posStr = this.formatTime(displayPos);
         String durStr = this.formatTime(this.cachedDuration);
-        nvg.drawRoundedRect(vg, (float)INFO_X, (float)BAR_Y, 652.0f, 6.0f, ElaraColors.GRAY_700, 3.0f);
+        nvg.drawRoundedRect(vg, (float)INFO_X, (float)BAR_Y, (float)BAR_W, 6.0f, ElaraColors.GRAY_700, 3.0f);
         if (displayProgress > 0.0f) {
-            nvg.drawRoundedRect(vg, (float)INFO_X, (float)(BAR_Y - 1), 652.0f * displayProgress, 8.0f, ElaraColors.accent(), 4.0f);
+            nvg.drawRoundedRect(vg, (float)INFO_X, (float)(BAR_Y - 1), (float)BAR_W * displayProgress, 8.0f, ElaraColors.accent(), 4.0f);
         }
         if (this.draggingProgress || barHovered) {
-            float knobX = (float)INFO_X + 652.0f * displayProgress - 12.0f;
+            float knobX = (float)INFO_X + (float)BAR_W * displayProgress - 12.0f;
             nvg.drawRoundedRect(vg, knobX, (float)(BAR_Y - 9), 24.0f, 24.0f, -1, 12.0f);
         }
-        float timeY = this.centerTextY(BAR_Y + 6 + 8, 24.0f, 13.0f, Fonts.MEDIUM);
-        nvg.drawText(vg, posStr, (float)INFO_X, timeY, ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
-        float durW = this.tw(vg, durStr, 13.0f, Fonts.MEDIUM);
-        nvg.drawText(vg, durStr, (float)(INFO_X + 652) - durW, timeY, ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
-        int btnY = cy + 180;
+        float timeY = this.centerTextY(BAR_Y + 6 + 8, 24.0f, 12.0f, Fonts.MEDIUM);
+        nvg.drawText(vg, posStr, (float)INFO_X, timeY, ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+        float durW = this.tw(vg, durStr, 12.0f, Fonts.MEDIUM);
+        nvg.drawText(vg, durStr, (float)(INFO_X + BAR_W) - durW, timeY, ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+
+        int btnY = cardY + 190;
         int btnX = INFO_X;
-        int btnGap = 16;
+        int btnGap = 14;
         int BTN_H = 40;
         BasicButton prevBtn = this.controlButtons.get(0);
         prevBtn.draw(vg, (float)btnX, (float)btnY, inputHandler);
@@ -415,7 +439,7 @@ public class MusicPlayerPage extends Page {
         int repeatBtnH = 32;
         int repeatBtnY = btnY + (BTN_H - repeatBtnH) / 2;
         boolean repeatHovered = inputHandler.isAreaHovered((float)btnX, (float)repeatBtnY, (float)repeatBtnW, (float)repeatBtnH);
-        nvg.drawRoundedRect(vg, (float)btnX, (float)repeatBtnY, (float)repeatBtnW, (float)repeatBtnH, repeatHovered ? ElaraColors.GRAY_700 : ElaraColors.GRAY_800, 6.0f);
+        nvg.drawRoundedRect(vg, (float)btnX, (float)repeatBtnY, (float)repeatBtnW, (float)repeatBtnH, repeatHovered ? ElaraColors.GRAY_700 : ElaraColors.GRAY_800, 14.0f);
         if (repeatHovered && repeatColor == ElaraColors.white60()) {
             repeatColor = ElaraColors.white90();
         }
@@ -423,11 +447,12 @@ public class MusicPlayerPage extends Page {
         if (this.isButtonClicked(inputHandler, btnX, repeatBtnY, repeatBtnW, repeatBtnH) && engine != null) {
             engine.cycleRepeatMode();
         }
-        int volRowY = btnY + BTN_H + 16;
+
+        int volRowY = cardY + cardH + 18;
         float volLabelW = this.tw(vg, "Volume", 13.0f, Fonts.MEDIUM);
-        nvg.drawText(vg, "Volume", (float)INFO_X, (float)(volRowY + 8), ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
-        int volBarX = INFO_X + (int)volLabelW + 16;
-        int volBarW = 652 - (int)volLabelW - 16 - 45;
+        nvg.drawText(vg, "Volume", (float)contentX, (float)(volRowY + 8), ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
+        int volBarX = contentX + (int)volLabelW + 16;
+        int volBarW = 920 - (int)volLabelW - 16 - 45;
         int volBarY = volRowY + 4;
         boolean volHovered = inputHandler.isAreaHovered((float)(volBarX - 12), (float)(volBarY - 12), (float)(volBarW + 24), 30.0f);
         boolean volMouseDown = Platform.getMousePlatform().isButtonDown(0);
@@ -451,10 +476,11 @@ public class MusicPlayerPage extends Page {
         nvg.drawRoundedRect(vg, (float)volBarX, (float)(volBarY - 1), (float)volBarW * volDisplay, 8.0f, ElaraColors.accent(), 4.0f);
         String volStr = (int)(volDisplay * 100.0f) + "%";
         float volTextW = this.tw(vg, volStr, 12.0f, Fonts.MEDIUM);
-        nvg.drawText(vg, volStr, (float)(INFO_X + 652) - volTextW, (float)(volRowY + 8), ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
-        this.drawSpectrum(vg, contentX, cy += 268, 920, 90);
-        this.drawLyricsPanel(vg, contentX, cy += 114, 920, inputHandler, engine);
-        this.totalSize = cy + 200 + 40 - y;
+        nvg.drawText(vg, volStr, (float)(contentX + 920) - volTextW, (float)(volRowY + 8), ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+
+        this.drawSpectrum(vg, contentX, volRowY + 56, 920, 90);
+        this.drawLyricsPanel(vg, contentX, volRowY + 170, 920, inputHandler, engine);
+        this.totalSize = volRowY + 170 + 200 + 40 - y;
     }
 
     private void drawLyricsPanel(long vg, int x, int y, int width, InputHandler inputHandler, MusicEngine engine) {
@@ -732,7 +758,131 @@ public class MusicPlayerPage extends Page {
         if (this.isButtonClicked(inputHandler, contentX + this.openCacheDirBtn.getWidth() + 12, cy, this.clearCacheBtn.getWidth(), 36.0f)) {
             cacheManager.clearCache();
         }
-        this.totalSize = (cy += 56) + 40 - y;
+        cy += 56;
+        nvg.drawLine(vg, (float)contentX, (float)cy, (float)(contentX + 920), (float)cy, 1.0f, ElaraColors.GRAY_600);
+        // ---- HUD DISPLAY ----
+        nvg.drawText(vg, "HUD DISPLAY", (float)contentX, (float)(cy += 28), ElaraColors.accentDim(), 12.0f, Fonts.BOLD);
+        cy += 24;
+        this.drawHudToggleRow(vg, inputHandler, contentX, cy, "Show Cover", hudShowCover, () -> { hudShowCover = !hudShowCover; this.saveHudToConfig(); });
+        cy += 48;
+        this.drawHudToggleRow(vg, inputHandler, contentX, cy, "Show Spectrum", hudShowSpectrum, () -> { hudShowSpectrum = !hudShowSpectrum; this.saveHudToConfig(); });
+        cy += 48;
+        this.drawHudToggleRow(vg, inputHandler, contentX, cy, "Show Progress Bar", hudShowProgress, () -> { hudShowProgress = !hudShowProgress; this.saveHudToConfig(); });
+        cy += 48;
+        this.drawHudToggleRow(vg, inputHandler, contentX, cy, "Hide When Not Playing", hudHideWhenNotPlaying, () -> { hudHideWhenNotPlaying = !hudHideWhenNotPlaying; this.saveHudToConfig(); });
+        cy += 52;
+        // ---- HUD APPEARANCE ----
+        nvg.drawLine(vg, (float)contentX, (float)cy, (float)(contentX + 920), (float)cy, 1.0f, ElaraColors.GRAY_600);
+        nvg.drawText(vg, "HUD APPEARANCE", (float)contentX, (float)(cy += 28), ElaraColors.accentDim(), 12.0f, Fonts.BOLD);
+        cy += 24;
+        MusicHud musicHud = this.getMusicHud();
+        if (musicHud != null) {
+            this.drawHudToggleRow(vg, inputHandler, contentX, cy, "Round Border", musicHud.roundBorder, () -> { musicHud.roundBorder = !musicHud.roundBorder; if (ElaraConfig.INSTANCE != null) ElaraConfig.INSTANCE.save(); });
+            cy += 48;
+            // Corner radius slider
+            nvg.drawText(vg, "Corner Radius", (float)contentX, this.centerTextY(cy, 48.0f, 14.0f, Fonts.MEDIUM), ElaraColors.white90(), 14.0f, Fonts.MEDIUM);
+            float cr = musicHud.cornerRadius;
+            float crLabelW = this.tw(vg, String.format("%.1f", cr), 12.0f, Fonts.MEDIUM);
+            nvg.drawText(vg, String.format("%.1f", cr), (float)(contentX + 920) - crLabelW - 16.0f, this.centerTextY(cy, 48.0f, 12.0f, Fonts.MEDIUM), ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+            int crBarX = contentX + 160; int crBarW = 920 - 160 - 60; int crBarY = cy + 20;
+            nvg.drawRoundedRect(vg, (float)crBarX, (float)crBarY, (float)crBarW, 6.0f, ElaraColors.GRAY_700, 3.0f);
+            float crProg = cr / 20.0f;
+            nvg.drawRoundedRect(vg, (float)crBarX, (float)(crBarY - 1), (float)crBarW * crProg, 8.0f, ElaraColors.accent(), 4.0f);
+            boolean crHover = inputHandler.isAreaHovered((float)(crBarX - 12), (float)(crBarY - 12), (float)(crBarW + 24), 30.0f);
+            boolean crDown = Platform.getMousePlatform().isButtonDown(0);
+            if (crHover && crDown && !this.draggingScale) { this.draggingScale = true; }
+            if (this.draggingScale && !crDown) { this.draggingScale = false; if (ElaraConfig.INSTANCE != null) ElaraConfig.INSTANCE.save(); }
+            if (this.draggingScale) {
+                float np = (inputHandler.mouseX() - (float)crBarX) / (float)crBarW;
+                musicHud.cornerRadius = Math.max(0.0f, Math.min(20.0f, np * 20.0f));
+            }
+            this.mouseWasDownScale = crDown;
+            cy += 48;
+            this.drawHudToggleRow(vg, inputHandler, contentX, cy, "Show Outline", musicHud.showOutline, () -> { musicHud.showOutline = !musicHud.showOutline; if (ElaraConfig.INSTANCE != null) ElaraConfig.INSTANCE.save(); });
+            cy += 48;
+            // Outline width slider
+            nvg.drawText(vg, "Outline Width", (float)contentX, this.centerTextY(cy, 48.0f, 14.0f, Fonts.MEDIUM), ElaraColors.white90(), 14.0f, Fonts.MEDIUM);
+            float ow = musicHud.outlineWidth;
+            float owLabelW = this.tw(vg, String.format("%.1f", ow), 12.0f, Fonts.MEDIUM);
+            nvg.drawText(vg, String.format("%.1f", ow), (float)(contentX + 920) - owLabelW - 16.0f, this.centerTextY(cy, 48.0f, 12.0f, Fonts.MEDIUM), ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+            int owBarX = contentX + 160; int owBarW = 920 - 160 - 60; int owBarY = cy + 20;
+            nvg.drawRoundedRect(vg, (float)owBarX, (float)owBarY, (float)owBarW, 6.0f, ElaraColors.GRAY_700, 3.0f);
+            float owProg = (ow - 1.0f) / 4.0f;
+            nvg.drawRoundedRect(vg, (float)owBarX, (float)(owBarY - 1), (float)owBarW * owProg, 8.0f, ElaraColors.accent(), 4.0f);
+            boolean owHover = inputHandler.isAreaHovered((float)(owBarX - 12), (float)(owBarY - 12), (float)(owBarW + 24), 30.0f);
+            boolean owDown = Platform.getMousePlatform().isButtonDown(0);
+            if (owHover && owDown && !this.draggingScale) { this.draggingScale = true; }
+            if (this.draggingScale && !owDown) { this.draggingScale = false; if (ElaraConfig.INSTANCE != null) ElaraConfig.INSTANCE.save(); }
+            if (this.draggingScale) {
+                float np = (inputHandler.mouseX() - (float)owBarX) / (float)owBarW;
+                musicHud.outlineWidth = Math.max(1.0f, Math.min(5.0f, 1.0f + np * 4.0f));
+            }
+            cy += 52;
+            // Outline color preview
+            nvg.drawText(vg, "Outline Color", (float)contentX, this.centerTextY(cy, 36.0f, 14.0f, Fonts.MEDIUM), ElaraColors.white90(), 14.0f, Fonts.MEDIUM);
+            int colorSwatchX = contentX + 920 - 48;
+            int colorSwatchY = cy + 4;
+            int oc = musicHud.outlineColor.getRGB();
+            nvg.drawRoundedRect(vg, (float)colorSwatchX, (float)colorSwatchY, 36.0f, 28.0f, oc, 6.0f);
+            nvg.drawHollowRoundRect(vg, (float)colorSwatchX, (float)colorSwatchY, 36.0f, 28.0f, ElaraColors.GRAY_600, 6.0f, 1.0f);
+            boolean colorHover = inputHandler.isAreaHovered((float)colorSwatchX, (float)colorSwatchY, 36.0f, 28.0f);
+            if (colorHover && inputHandler.isClicked()) {
+                // Cycle through preset colors
+                OneColor[] presets = {
+                    new OneColor(90, 200, 250, 255),
+                    new OneColor(255, 255, 255, 255),
+                    new OneColor(255, 100, 100, 255),
+                    new OneColor(100, 255, 100, 255),
+                    new OneColor(255, 200, 0, 255),
+                    new OneColor(180, 100, 255, 255)
+                };
+                int curIdx = 0;
+                for (int pi = 0; pi < presets.length; pi++) {
+                    if (presets[pi].getRGB() == oc) { curIdx = pi; break; }
+                }
+                musicHud.outlineColor = presets[(curIdx + 1) % presets.length];
+                if (ElaraConfig.INSTANCE != null) ElaraConfig.INSTANCE.save();
+            }
+            cy += 40;
+        }
+        // ---- HUD POSITION ----
+        nvg.drawLine(vg, (float)contentX, (float)cy, (float)(contentX + 920), (float)cy, 1.0f, ElaraColors.GRAY_600);
+        nvg.drawText(vg, "HUD POSITION", (float)contentX, (float)(cy += 28), ElaraColors.accentDim(), 12.0f, Fonts.BOLD);
+        cy += 24;
+        // Scale slider
+        nvg.drawText(vg, "HUD Scale", (float)contentX, this.centerTextY(cy, 48.0f, 14.0f, Fonts.MEDIUM), ElaraColors.white90(), 14.0f, Fonts.MEDIUM);
+        float sc = hudScale;
+        float scLabelW = this.tw(vg, String.format("%.2f", sc), 12.0f, Fonts.MEDIUM);
+        nvg.drawText(vg, String.format("%.2f", sc), (float)(contentX + 920) - scLabelW - 16.0f, this.centerTextY(cy, 48.0f, 12.0f, Fonts.MEDIUM), ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+        int scBarX = contentX + 160; int scBarW = 920 - 160 - 60; int scBarY = cy + 20;
+        nvg.drawRoundedRect(vg, (float)scBarX, (float)scBarY, (float)scBarW, 6.0f, ElaraColors.GRAY_700, 3.0f);
+        float scProg = (sc - 0.5f) / 1.5f;
+        nvg.drawRoundedRect(vg, (float)scBarX, (float)(scBarY - 1), (float)scBarW * scProg, 8.0f, ElaraColors.accent(), 4.0f);
+        boolean scHover = inputHandler.isAreaHovered((float)(scBarX - 12), (float)(scBarY - 12), (float)(scBarW + 24), 30.0f);
+        boolean scDown = Platform.getMousePlatform().isButtonDown(0);
+        if (scHover && scDown && !this.draggingVolume) { this.draggingVolume = true; }
+        if (this.draggingVolume && !scDown) { this.draggingVolume = false; this.saveHudToConfig(); }
+        if (this.draggingVolume) {
+            float np = (inputHandler.mouseX() - (float)scBarX) / (float)scBarW;
+            hudScale = Math.max(0.5f, Math.min(2.0f, 0.5f + np * 1.5f));
+        }
+        this.mouseWasDownVolume = scDown;
+        cy += 48;
+        // Reset position button
+        this.resetPosBtn.draw(vg, (float)contentX, (float)cy, inputHandler);
+        if (this.isButtonClicked(inputHandler, contentX, cy, this.resetPosBtn.getWidth(), 36.0f)) {
+            hudScale = 1.0f; hudPosX = 0.0f; hudPosY = 0.0f;
+            this.saveHudToConfig();
+            MusicHud hud = this.getMusicHud();
+            if (hud != null) { hud.resetHudPosition(); hud.setHudScale(1.0f); if (ElaraConfig.INSTANCE != null) ElaraConfig.INSTANCE.save(); }
+        }
+        cy += 48;
+        // HUD preview
+        nvg.drawText(vg, "HUD PREVIEW", (float)contentX, (float)(cy += 8), ElaraColors.accentDim(), 11.0f, Fonts.BOLD);
+        cy += 20;
+        this.drawHudPreview(vg, contentX, cy, inputHandler);
+        cy += 140;
+        this.totalSize = cy + 40 - y;
     }
 
     private MusicHud getMusicHud() {
@@ -891,16 +1041,21 @@ public class MusicPlayerPage extends Page {
         NanoVGHelper nvg = NanoVGHelper.INSTANCE;
         int cy = y + 40 + 32;
         int contentX = x + 20;
-        nvg.drawText(vg, "ONLINE MUSIC", (float)contentX, (float)cy, ElaraColors.accentDim(), 12.0f, Fonts.BOLD);
-        nvg.drawText(vg, "Search and play music from online sources", (float)contentX, (float)(cy + 28), -1, 20.0f, Fonts.BOLD);
-        cy += 72;
-        if (!this.apiChecked) {
-            this.checkApiConnection();
-        }
+
+        // ---- Hero header card ----
+        int headerH = 72;
+        nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 920.0f, (float)headerH, ElaraColors.gray800Alpha(220), 14.0f);
+        nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 4.0f, (float)headerH, ElaraColors.accent(), 2.0f);
+        nvg.drawText(vg, "ONLINE MUSIC", (float)(contentX + 24), (float)(cy + 18), ElaraColors.accentDim(), 11.0f, Fonts.BOLD);
+        nvg.drawText(vg, "NetEase Cloud Music", (float)(contentX + 24), (float)(cy + 46), -1, 18.0f, Fonts.BOLD);
+        if (!this.apiChecked) { this.checkApiConnection(); }
         if (!this.apiStatus.isEmpty()) {
-            nvg.drawText(vg, this.apiStatus, (float)contentX, (float)(cy + 16), this.apiStatus.contains("Connected") ? -11751600 : -44462, 12.0f, Fonts.MEDIUM);
-            cy += 28;
+            float statusW = this.tw(vg, this.apiStatus, 11.0f, Fonts.MEDIUM);
+            int sx = contentX + 920 - (int)statusW - 24;
+            nvg.drawText(vg, this.apiStatus, (float)sx, (float)(cy + 46), this.apiStatus.contains("Connected") ? -11751600 : -44462, 11.0f, Fonts.MEDIUM);
         }
+        cy += headerH + 16;
+
         if (this.onlineView != OnlineView.PLAYLIST_DETAIL) {
             this.searchTabBtn.setToggleable(true);
             this.playlistsTabBtn.setToggleable(true);
@@ -910,7 +1065,7 @@ public class MusicPlayerPage extends Page {
             this.playlistsTabBtn.draw(vg, (float)(contentX + this.searchTabBtn.getWidth() + 8), (float)cy, inputHandler);
             this.updateLoginButtonState();
             this.loginBtn.draw(vg, (float)(contentX + 920 - this.loginBtn.getWidth()), (float)cy, inputHandler);
-            nvg.drawLine(vg, (float)contentX, (float)(cy += this.searchTabBtn.getHeight() + 24), (float)(contentX + 920), (float)cy, 1.0f, ElaraColors.GRAY_600);
+            nvg.drawLine(vg, (float)contentX, (float)(cy += this.searchTabBtn.getHeight() + 20), (float)(contentX + 920), (float)cy, 1.0f, ElaraColors.GRAY_600);
             cy += 16;
         }
         if (this.onlineView == OnlineView.SEARCH) {
@@ -925,11 +1080,13 @@ public class MusicPlayerPage extends Page {
 
     private int drawOnlineSearchView(long vg, int contentX, int cy, InputHandler inputHandler) {
         NanoVGHelper nvg = NanoVGHelper.INSTANCE;
+        // ---- Search bar row ----
         this.searchInput.draw(vg, (float)contentX, (float)cy, inputHandler);
         this.searchBtn.draw(vg, (float)(contentX + this.searchInput.getWidth() + 8), (float)cy, inputHandler);
-        this.hotSongsBtn.draw(vg, (float)contentX, (float)(cy += this.searchInput.getHeight() + 24), inputHandler);
+        this.hotSongsBtn.draw(vg, (float)contentX, (float)(cy += this.searchInput.getHeight() + 20), inputHandler);
         this.refreshOnlineBtn.draw(vg, (float)(contentX + this.hotSongsBtn.getWidth() + 12), (float)cy, inputHandler);
-        cy += 48;
+        cy += 44;
+        // ---- Results ----
         if (this.isOnlineLoading) {
             nvg.drawText(vg, "Loading...", (float)contentX, (float)(cy + 28), ElaraColors.white60(), 16.0f, Fonts.MEDIUM);
             cy += 60;
@@ -938,27 +1095,32 @@ public class MusicPlayerPage extends Page {
             nvg.drawText(vg, emptyMsg, (float)contentX, (float)(cy + 28), ElaraColors.white60(), 16.0f, Fonts.MEDIUM);
             cy += 60;
         } else {
-            int rowHeight = 44;
+            nvg.drawText(vg, "RESULTS", (float)contentX, (float)cy, ElaraColors.accentDim(), 11.0f, Fonts.BOLD);
+            cy += 24;
+            int rowHeight = 48;
             for (int i = 0; i < this.onlineSongList.size(); ++i) {
                 boolean isSelected;
                 SongInfo song = this.onlineSongList.get(i);
                 int rowY = cy + i * rowHeight;
                 boolean bl = isSelected = i == this.onlineSelectedIndex;
+                boolean isHovered = inputHandler.isAreaHovered((float)contentX, (float)rowY, 920.0f, (float)(rowHeight - 6));
+                int rowBg = isSelected ? ElaraColors.GRAY_700 : (isHovered ? ElaraColors.GRAY_750 : ElaraColors.gray800Alpha(180));
+                nvg.drawRoundedRect(vg, (float)contentX, (float)rowY, 920.0f, (float)(rowHeight - 6), rowBg, 8.0f);
                 if (isSelected) {
-                    nvg.drawRoundedRect(vg, (float)contentX, (float)rowY, 920.0f, (float)(rowHeight - 4), ElaraColors.GRAY_700, 6.0f);
+                    nvg.drawRoundedRect(vg, (float)contentX, (float)rowY, 3.0f, (float)(rowHeight - 6), ElaraColors.accent(), 2.0f);
                 }
-                float rowTextY = this.centerTextY(rowY, rowHeight - 4, 14.0f, Fonts.MEDIUM);
+                float rowTextY = this.centerTextY(rowY, rowHeight - 6, 14.0f, Fonts.MEDIUM);
                 String status = isSelected ? "\u25b6" : String.valueOf(i + 1);
-                float statusW = this.tw(vg, status, 12.0f, Fonts.MEDIUM);
-                nvg.drawText(vg, status, (float)(contentX + 20) - statusW / 2.0f, rowTextY, isSelected ? ElaraColors.accent() : ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
-                String title = this.truncate(song.getName(), 45);
-                nvg.drawText(vg, title, (float)(contentX + 50), rowTextY, isSelected ? ElaraColors.WHITE : ElaraColors.white90(), 14.0f, Fonts.MEDIUM);
-                String artist = this.truncate(song.getArtist(), 25);
-                nvg.drawText(vg, artist, (float)(contentX + 450), rowTextY, ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
+                float statusW = this.tw(vg, status, 13.0f, Fonts.MEDIUM);
+                nvg.drawText(vg, status, (float)(contentX + 24) - statusW / 2.0f, rowTextY, isSelected ? ElaraColors.accent() : ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
+                String title = MusicLayout.truncByWidth(vg, song.getName(), 14.0f, Fonts.MEDIUM, 380.0f, this.textWidthCache);
+                nvg.drawText(vg, title, (float)(contentX + 56), rowTextY, isSelected ? ElaraColors.WHITE : ElaraColors.white90(), 14.0f, Fonts.MEDIUM);
+                String artist = MusicLayout.truncByWidth(vg, song.getArtist(), 13.0f, Fonts.MEDIUM, 200.0f, this.textWidthCache);
+                nvg.drawText(vg, artist, (float)(contentX + 460), rowTextY, ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
                 String dur = song.getFormattedDuration();
                 float durW = this.tw(vg, dur, 12.0f, Fonts.MEDIUM);
-                nvg.drawText(vg, dur, (float)(contentX + 920) - durW - 16.0f, rowTextY, ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
-                if (!inputHandler.isClicked() || !(inputHandler.mouseX() >= (float)contentX) || !(inputHandler.mouseX() <= (float)(contentX + 920)) || !(inputHandler.mouseY() >= (float)rowY) || !(inputHandler.mouseY() <= (float)(rowY + rowHeight - 4))) continue;
+                nvg.drawText(vg, dur, (float)(contentX + 920) - durW - 20.0f, rowTextY, ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+                if (!inputHandler.isClicked() || !(inputHandler.mouseX() >= (float)contentX) || !(inputHandler.mouseX() <= (float)(contentX + 920)) || !(inputHandler.mouseY() >= (float)rowY) || !(inputHandler.mouseY() <= (float)(rowY + rowHeight - 6))) continue;
                 this.onlineSelectedIndex = i;
                 this.playOnlineSong(song, i);
             }
@@ -975,15 +1137,19 @@ public class MusicPlayerPage extends Page {
         }
         if (fetcher.isLoggedIn()) {
             String path;
+            // ---- Profile card ----
+            int profileCardH = 120;
+            nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 920.0f, (float)profileCardH, ElaraColors.gray800Alpha(220), 14.0f);
+            nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 4.0f, (float)profileCardH, ElaraColors.accent(), 2.0f);
             int avatarSize = 64;
-            int avatarX = contentX;
-            int avatarY = cy;
-            nvg.drawRoundedRect(vg, (float)avatarX, (float)avatarY, (float)avatarSize, (float)avatarSize, ElaraColors.GRAY_700, 8.0f);
+            int avatarX = contentX + 28;
+            int avatarY = cy + 28;
+            nvg.drawRoundedRect(vg, (float)avatarX, (float)avatarY, (float)avatarSize, (float)avatarSize, ElaraColors.GRAY_700, 10.0f);
             if (this.userAvatarPath == null && this.userAvatarUrl != null && !this.userAvatarUrl.isEmpty() && (path = CoverManager.getNetworkCoverPath(this.userAvatarUrl)) != null) {
                 this.userAvatarPath = path;
             }
             if (this.userAvatarPath != null) {
-                nvg.drawRoundImage(vg, this.userAvatarPath, (float)avatarX, (float)avatarY, (float)avatarSize, (float)avatarSize, 8.0f, MusicPlayerPage.class);
+                nvg.drawRoundImage(vg, this.userAvatarPath, (float)avatarX, (float)avatarY, (float)avatarSize, (float)avatarSize, 10.0f, MusicPlayerPage.class);
             } else {
                 String firstLetter = this.userNickname.isEmpty() ? "U" : this.userNickname.substring(0, 1);
                 float flSize = 28.0f;
@@ -991,10 +1157,10 @@ public class MusicPlayerPage extends Page {
                 float flY = this.centerTextY(avatarY, avatarSize, flSize, Fonts.BOLD);
                 nvg.drawText(vg, firstLetter, (float)avatarX + ((float)avatarSize - flW) / 2.0f, flY, ElaraColors.accent(), flSize, Fonts.BOLD);
             }
-            int infoX = avatarX + avatarSize + 20;
+            int infoX = avatarX + avatarSize + 24;
             nvg.drawText(vg, this.userNickname.isEmpty() ? "Loading..." : this.userNickname, (float)infoX, (float)(avatarY + 24), -1, 20.0f, Fonts.BOLD);
             if (this.userLevel > 0) {
-                int levelBadgeW = 48;
+                int levelBadgeW = 52;
                 int levelBadgeH = 22;
                 int levelBadgeX = infoX;
                 int levelBadgeY = avatarY + 36;
@@ -1004,23 +1170,28 @@ public class MusicPlayerPage extends Page {
                 float lsY = this.centerTextY(levelBadgeY, levelBadgeH, 11.0f, Fonts.BOLD);
                 nvg.drawText(vg, levelStr, (float)levelBadgeX + ((float)levelBadgeW - lsW) / 2.0f, lsY, -1, 11.0f, Fonts.BOLD);
             }
-            int statY = avatarY + avatarSize + 16;
+            // Stats row inside profile card
+            int statY = cy + profileCardH - 28;
             String[] statLabels = new String[]{"Playlists", "Follows", "Fans", "Scrobbles"};
             int[] statValues = new int[]{this.userPlaylistCount, this.userFollows, this.userFolloweds, this.userListenSongs};
-            int statGap = 80;
+            int statGap = 160;
             for (int i = 0; i < statLabels.length; ++i) {
-                int sx = contentX + i * statGap;
-                nvg.drawText(vg, String.valueOf(statValues[i]), (float)sx, (float)(statY + 20), -1, 18.0f, Fonts.BOLD);
-                nvg.drawText(vg, statLabels[i], (float)sx, (float)(statY + 40), ElaraColors.white60(), 11.0f, Fonts.MEDIUM);
+                int sx = contentX + 28 + i * statGap;
+                float valW = this.tw(vg, String.valueOf(statValues[i]), 16.0f, Fonts.BOLD);
+                float lblW = this.tw(vg, statLabels[i], 11.0f, Fonts.MEDIUM);
+                nvg.drawText(vg, String.valueOf(statValues[i]), (float)sx, (float)(statY - 4), -1, 16.0f, Fonts.BOLD);
+                nvg.drawText(vg, statLabels[i], (float)sx, (float)(statY + 18), ElaraColors.white60(), 11.0f, Fonts.MEDIUM);
             }
-            cy = statY + 56;
+            cy += profileCardH + 20;
             nvg.drawLine(vg, (float)contentX, (float)cy, (float)(contentX + 920), (float)cy, 1.0f, ElaraColors.GRAY_600);
             cy += 16;
         } else {
-            nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 920.0f, 120.0f, ElaraColors.GRAY_700, 12.0f);
-            nvg.drawText(vg, "Sign in to see your playlists", (float)(contentX + 24), (float)(cy + 44), -1, 18.0f, Fonts.BOLD);
-            nvg.drawText(vg, "Log in with NetEase Cloud Music to access your saved playlists and favorites", (float)(contentX + 24), (float)(cy + 72), ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
-            this.loginBtn.draw(vg, (float)(contentX + 24), (float)(cy + 88), inputHandler);
+            // ---- Sign-in prompt card ----
+            nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 920.0f, 120.0f, ElaraColors.gray800Alpha(220), 14.0f);
+            nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 4.0f, 120.0f, ElaraColors.GRAY_600, 2.0f);
+            nvg.drawText(vg, "Sign in to see your playlists", (float)(contentX + 28), (float)(cy + 40), -1, 18.0f, Fonts.BOLD);
+            nvg.drawText(vg, "Log in with NetEase Cloud Music to access your saved playlists and favorites", (float)(contentX + 28), (float)(cy + 68), ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
+            this.loginBtn.draw(vg, (float)(contentX + 28), (float)(cy + 84), inputHandler);
             cy += 140;
         }
         if (this.loadingPlaylists) {
@@ -1031,8 +1202,8 @@ public class MusicPlayerPage extends Page {
             cy += 24;
             int cols = 4;
             int cardW = (920 - (cols - 1) * 16) / cols;
-            int cardH = cardW + 48;
-            int rowGap = 24;
+            int cardH = cardW + 56;
+            int rowGap = 20;
             int totalRows = (int)Math.ceil((double)this.userPlaylists.size() / (double)cols);
             for (int row = 0; row < totalRows; ++row) {
                 for (int col = 0; col < cols; ++col) {
@@ -1041,23 +1212,34 @@ public class MusicPlayerPage extends Page {
                     MusicApi.PlaylistInfo playlist = this.userPlaylists.get(idx);
                     int cardX = contentX + col * (cardW + 16);
                     int cardY = cy + row * (cardH + rowGap);
+                    boolean plHovered = inputHandler.isAreaHovered((float)cardX, (float)cardY, (float)cardW, (float)cardH);
+                    nvg.drawRoundedRect(vg, (float)cardX, (float)cardY, (float)cardW, (float)(cardW + 56), plHovered ? ElaraColors.GRAY_750 : ElaraColors.gray800Alpha(200), 10.0f);
+                    // Cover area
                     nvg.drawRoundedRect(vg, (float)cardX, (float)cardY, (float)cardW, (float)cardW, ElaraColors.GRAY_700, 10.0f);
                     String coverPath = CoverManager.getNetworkCoverPath(playlist.coverUrl);
                     if (coverPath != null) {
                         nvg.drawRoundImage(vg, coverPath, (float)cardX, (float)cardY, (float)cardW, (float)cardW, 10.0f, MusicPlayerPage.class);
                     }
+                    if (plHovered) {
+                        nvg.drawRoundedRect(vg, (float)cardX, (float)cardY, (float)cardW, (float)cardW, ElaraColors.blackAlpha(80), 10.0f);
+                        float playW = this.tw(vg, "\u25b6 Play", 12.0f, Fonts.BOLD);
+                        nvg.drawRoundedRect(vg, (float)cardX + ((float)cardW - playW - 24.0f) / 2.0f, (float)(cardY + cardW / 2 - 14), playW + 24.0f, 28.0f, ElaraColors.accent(), 14.0f);
+                        nvg.drawText(vg, "\u25b6 Play", (float)cardX + ((float)cardW - playW) / 2.0f, this.centerTextY((float)(cardY + cardW / 2 - 14), 28.0f, 12.0f, Fonts.BOLD), -1, 12.0f, Fonts.BOLD);
+                    }
+                    // Track count badge
                     String trackStr = playlist.trackCount + " songs";
-                    float trackBadgeW = this.tw(vg, trackStr, 10.0f, Fonts.MEDIUM) + 12.0f;
-                    int trackBadgeH = 18;
-                    int trackBadgeX = cardX + cardW - (int)trackBadgeW - 6;
-                    int trackBadgeY = cardY + cardW - trackBadgeH - 6;
-                    nvg.drawRoundedRect(vg, (float)trackBadgeX, (float)trackBadgeY, trackBadgeW, (float)trackBadgeH, -872415232, 9.0f);
+                    float trackBadgeW = this.tw(vg, trackStr, 10.0f, Fonts.MEDIUM) + 14.0f;
+                    int trackBadgeH = 20;
+                    int trackBadgeX = cardX + cardW - (int)trackBadgeW - 8;
+                    int trackBadgeY = cardY + cardW - trackBadgeH - 8;
+                    nvg.drawRoundedRect(vg, (float)trackBadgeX, (float)trackBadgeY, trackBadgeW, (float)trackBadgeH, -872415232, 10.0f);
                     float tbY = this.centerTextY(trackBadgeY, trackBadgeH, 10.0f, Fonts.MEDIUM);
-                    nvg.drawText(vg, trackStr, (float)(trackBadgeX + 6), tbY, -1, 10.0f, Fonts.MEDIUM);
-                    String plName = this.truncate(playlist.name, 20);
-                    nvg.drawText(vg, plName, (float)cardX, (float)(cardY + cardW + 22), -1, 13.0f, Fonts.MEDIUM);
-                    String creatorStr = this.truncate(playlist.creator, 18);
-                    nvg.drawText(vg, "by " + creatorStr, (float)cardX, (float)(cardY + cardW + 40), ElaraColors.white60(), 11.0f, Fonts.MEDIUM);
+                    nvg.drawText(vg, trackStr, (float)(trackBadgeX + 7), tbY, -1, 10.0f, Fonts.MEDIUM);
+                    // Playlist name + creator
+                    String plName = MusicLayout.truncByWidth(vg, playlist.name, 13.0f, Fonts.MEDIUM, (float)cardW, this.textWidthCache);
+                    nvg.drawText(vg, plName, (float)cardX, (float)(cardY + cardW + 24), -1, 13.0f, Fonts.MEDIUM);
+                    String creatorStr = MusicLayout.truncByWidth(vg, playlist.creator, 11.0f, Fonts.MEDIUM, (float)cardW, this.textWidthCache);
+                    nvg.drawText(vg, "by " + creatorStr, (float)cardX, (float)(cardY + cardW + 44), ElaraColors.white60(), 11.0f, Fonts.MEDIUM);
                     if (!inputHandler.isClicked() || !(inputHandler.mouseX() >= (float)cardX) || !(inputHandler.mouseX() <= (float)(cardX + cardW)) || !(inputHandler.mouseY() >= (float)cardY) || !(inputHandler.mouseY() <= (float)(cardY + cardH))) continue;
                     this.openPlaylistDetail(playlist);
                 }
@@ -1073,26 +1255,32 @@ public class MusicPlayerPage extends Page {
     private int drawPlaylistDetailView(long vg, int contentX, int cy, InputHandler inputHandler) {
         NanoVGHelper nvg = NanoVGHelper.INSTANCE;
         this.backToPlaylistsBtn.draw(vg, (float)contentX, (float)cy, inputHandler);
-        cy += this.backToPlaylistsBtn.getHeight() + 24;
+        cy += this.backToPlaylistsBtn.getHeight() + 20;
         if (this.currentPlaylist == null) {
             return cy;
         }
-        int COVER_SIZE = 180;
-        int coverX = contentX;
-        int coverY = cy;
-        nvg.drawRoundedRect(vg, (float)coverX, (float)coverY, 180.0f, 180.0f, ElaraColors.GRAY_700, 12.0f);
+        // ---- Detail header card ----
+        int headerH = 200;
+        nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 920.0f, (float)headerH, ElaraColors.gray800Alpha(220), 14.0f);
+        nvg.drawRoundedRect(vg, (float)contentX, (float)cy, 4.0f, (float)headerH, ElaraColors.accent(), 2.0f);
+        int COVER_SIZE = 160;
+        int coverX = contentX + 28;
+        int coverY = cy + 20;
+        nvg.drawRoundedRect(vg, (float)coverX, (float)coverY, (float)COVER_SIZE, (float)COVER_SIZE, ElaraColors.GRAY_700, 12.0f);
         if (this.currentPlaylistCoverPath != null) {
-            nvg.drawRoundImage(vg, this.currentPlaylistCoverPath, (float)coverX, (float)coverY, 180.0f, 180.0f, 12.0f, MusicPlayerPage.class);
+            nvg.drawRoundImage(vg, this.currentPlaylistCoverPath, (float)coverX, (float)coverY, (float)COVER_SIZE, (float)COVER_SIZE, 12.0f, MusicPlayerPage.class);
         }
-        int infoX = coverX + 180 + 32;
-        int infoW = 708;
-        nvg.drawText(vg, "PLAYLIST", (float)infoX, (float)(coverY + 12), ElaraColors.accentDim(), 11.0f, Fonts.BOLD);
-        nvg.drawText(vg, this.truncate(this.currentPlaylist.name, 30), (float)infoX, (float)(coverY + 40), -1, 24.0f, Fonts.BOLD);
-        nvg.drawText(vg, "by " + this.currentPlaylist.creator, (float)infoX, (float)(coverY + 76), ElaraColors.white60(), 14.0f, Fonts.MEDIUM);
+        int infoX = coverX + COVER_SIZE + 32;
+        int infoW = contentX + 920 - infoX - 28;
+        nvg.drawText(vg, "PLAYLIST", (float)infoX, (float)(coverY + 8), ElaraColors.accentDim(), 11.0f, Fonts.BOLD);
+        String plName = MusicLayout.truncByWidth(vg, this.currentPlaylist.name, 24.0f, Fonts.BOLD, (float)infoW, this.textWidthCache);
+        nvg.drawText(vg, plName, (float)infoX, (float)(coverY + 36), -1, 24.0f, Fonts.BOLD);
+        nvg.drawText(vg, "by " + this.currentPlaylist.creator, (float)infoX, (float)(coverY + 72), ElaraColors.white60(), 14.0f, Fonts.MEDIUM);
         String songCountStr = this.currentPlaylist.trackCount + " songs";
-        nvg.drawText(vg, songCountStr, (float)infoX, (float)(coverY + 108), ElaraColors.white30(), 12.0f, Fonts.MEDIUM);
-        this.playAllBtn.draw(vg, (float)infoX, (float)(coverY + 180 - this.playAllBtn.getHeight()), inputHandler);
-        nvg.drawLine(vg, (float)contentX, (float)(cy += 204), (float)(contentX + 920), (float)cy, 1.0f, ElaraColors.GRAY_600);
+        nvg.drawText(vg, songCountStr, (float)infoX, (float)(coverY + 100), ElaraColors.white30(), 12.0f, Fonts.MEDIUM);
+        this.playAllBtn.draw(vg, (float)infoX, (float)(coverY + 130), inputHandler);
+        cy += headerH + 16;
+        nvg.drawLine(vg, (float)contentX, (float)cy, (float)(contentX + 920), (float)cy, 1.0f, ElaraColors.GRAY_600);
         cy += 16;
         if (this.loadingPlaylistDetail) {
             nvg.drawText(vg, "Loading songs...", (float)contentX, (float)(cy + 20), ElaraColors.white60(), 14.0f, Fonts.MEDIUM);
@@ -1101,29 +1289,32 @@ public class MusicPlayerPage extends Page {
             nvg.drawText(vg, "No songs in this playlist", (float)contentX, (float)(cy + 20), ElaraColors.white60(), 14.0f, Fonts.MEDIUM);
             cy += 60;
         } else {
-            int rowHeight = 44;
+            int rowHeight = 48;
             for (int i = 0; i < this.playlistSongList.size(); ++i) {
                 boolean isSelected;
                 SongInfo song = this.playlistSongList.get(i);
                 int rowY = cy + i * rowHeight;
                 boolean bl = isSelected = i == this.onlineSelectedIndex;
+                boolean isHovered = inputHandler.isAreaHovered((float)contentX, (float)rowY, 920.0f, (float)(rowHeight - 6));
+                int rowBg = isSelected ? ElaraColors.GRAY_700 : (isHovered ? ElaraColors.GRAY_750 : ElaraColors.gray800Alpha(180));
+                nvg.drawRoundedRect(vg, (float)contentX, (float)rowY, 920.0f, (float)(rowHeight - 6), rowBg, 8.0f);
                 if (isSelected) {
-                    nvg.drawRoundedRect(vg, (float)contentX, (float)rowY, 920.0f, (float)(rowHeight - 4), ElaraColors.GRAY_700, 6.0f);
+                    nvg.drawRoundedRect(vg, (float)contentX, (float)rowY, 3.0f, (float)(rowHeight - 6), ElaraColors.accent(), 2.0f);
                 }
-                float rowTextY = this.centerTextY(rowY, rowHeight - 4, 14.0f, Fonts.MEDIUM);
+                float rowTextY = this.centerTextY(rowY, rowHeight - 6, 14.0f, Fonts.MEDIUM);
                 String status = isSelected ? "\u25b6" : String.valueOf(i + 1);
-                float statusW = this.tw(vg, status, 12.0f, Fonts.MEDIUM);
-                nvg.drawText(vg, status, (float)(contentX + 20) - statusW / 2.0f, rowTextY, isSelected ? ElaraColors.accent() : ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
-                String title = this.truncate(song.getName(), 42);
-                nvg.drawText(vg, title, (float)(contentX + 50), rowTextY, isSelected ? ElaraColors.WHITE : ElaraColors.white90(), 14.0f, Fonts.MEDIUM);
-                String artist = this.truncate(song.getArtist(), 22);
+                float statusW = this.tw(vg, status, 13.0f, Fonts.MEDIUM);
+                nvg.drawText(vg, status, (float)(contentX + 24) - statusW / 2.0f, rowTextY, isSelected ? ElaraColors.accent() : ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
+                String title = MusicLayout.truncByWidth(vg, song.getName(), 14.0f, Fonts.MEDIUM, 350.0f, this.textWidthCache);
+                nvg.drawText(vg, title, (float)(contentX + 56), rowTextY, isSelected ? ElaraColors.WHITE : ElaraColors.white90(), 14.0f, Fonts.MEDIUM);
+                String artist = MusicLayout.truncByWidth(vg, song.getArtist(), 13.0f, Fonts.MEDIUM, 180.0f, this.textWidthCache);
                 nvg.drawText(vg, artist, (float)(contentX + 430), rowTextY, ElaraColors.white60(), 13.0f, Fonts.MEDIUM);
-                String album = this.truncate(song.getAlbum(), 20);
-                nvg.drawText(vg, album, (float)(contentX + 620), rowTextY, ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+                String album = MusicLayout.truncByWidth(vg, song.getAlbum(), 12.0f, Fonts.MEDIUM, 160.0f, this.textWidthCache);
+                nvg.drawText(vg, album, (float)(contentX + 630), rowTextY, ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
                 String dur = song.getFormattedDuration();
                 float durW = this.tw(vg, dur, 12.0f, Fonts.MEDIUM);
-                nvg.drawText(vg, dur, (float)(contentX + 920) - durW - 16.0f, rowTextY, ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
-                if (!inputHandler.isClicked() || !(inputHandler.mouseX() >= (float)contentX) || !(inputHandler.mouseX() <= (float)(contentX + 920)) || !(inputHandler.mouseY() >= (float)rowY) || !(inputHandler.mouseY() <= (float)(rowY + rowHeight - 4))) continue;
+                nvg.drawText(vg, dur, (float)(contentX + 920) - durW - 20.0f, rowTextY, ElaraColors.white60(), 12.0f, Fonts.MEDIUM);
+                if (!inputHandler.isClicked() || !(inputHandler.mouseX() >= (float)contentX) || !(inputHandler.mouseX() <= (float)(contentX + 920)) || !(inputHandler.mouseY() >= (float)rowY) || !(inputHandler.mouseY() <= (float)(rowY + rowHeight - 6))) continue;
                 this.onlineSelectedIndex = i;
                 this.playOnlineSong(song, i, this.playlistSongList);
             }

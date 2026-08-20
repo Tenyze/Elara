@@ -1,187 +1,186 @@
 package elara.module.utility;
 
+import elara.Elara;
 import elara.event.EventTarget;
 import elara.event.types.EventType;
 import elara.event.types.Priority;
 import elara.events.LeftClickMouseEvent;
 import elara.events.TickEvent;
 import elara.module.Module;
-import elara.util.*;
+import elara.module.combat.KillAura;
 import elara.property.properties.BooleanProperty;
-import elara.property.properties.FloatProperty;
 import elara.property.properties.IntProperty;
+import elara.util.ItemUtil;
+import elara.util.KeyBindUtil;
+import elara.util.RandomUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.MovingObjectPosition.MovingObjectType;
-import net.minecraft.world.WorldSettings.GameType;
-
-import java.util.Objects;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.MovingObjectPosition;
 
 public class AutoClicker extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
-    private boolean clickPending = false;
-    private long clickDelay = 0L;
-    private boolean blockHitPending = false;
-    private long blockHitDelay = 0L;
-    public final IntProperty minCPS = new IntProperty("min-cps", 8, 1, 20);
-    public final IntProperty maxCPS = new IntProperty("max-cps", 12, 1, 20);
-    public final BooleanProperty blockHit = new BooleanProperty("block-hit", false);
-    public final FloatProperty blockHitTicks = new FloatProperty("block-hit-ticks", 1.5F, 1.0F, 20.0F, this.blockHit::getValue);
-    public final BooleanProperty weaponsOnly = new BooleanProperty("weapons-only", true);
-    public final BooleanProperty allowTools = new BooleanProperty("allow-tools", false, this.weaponsOnly::getValue);
-    public final BooleanProperty breakBlocks = new BooleanProperty("break-blocks", true);
-    public final FloatProperty range = new FloatProperty("range", 3.0F, 3.0F, 8.0F, this.breakBlocks::getValue);
-    public final FloatProperty hitBoxVertical = new FloatProperty("hit-box-vertical", 0.1F, 0.0F, 1.0F, this.breakBlocks::getValue);
-    public final FloatProperty hitBoxHorizontal = new FloatProperty("hit-box-horizontal", 0.2F, 0.0F, 1.0F, this.breakBlocks::getValue);
 
-    private long getNextClickDelay() {
-        return 1000L / RandomUtil.nextLong(this.minCPS.getValue(), this.maxCPS.getValue());
-    }
+    public final IntProperty minCPS = new IntProperty("Min CPS", 14, 1, 20);
+    public final IntProperty maxCPS = new IntProperty("Max CPS", 18, 1, 20);
+    public final BooleanProperty weaponsOnly = new BooleanProperty("Weapons Only", true);
+    public final BooleanProperty allowTools = new BooleanProperty("Allow Tools", false, weaponsOnly::getValue);
+    public final BooleanProperty breakBlocks = new BooleanProperty("Break Blocks", true);
 
-    private long getBlockHitDelay() {
-        return (long) (50.0F * this.blockHitTicks.getValue());
-    }
-
-    private boolean isBreakingBlock() {
-        return mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectType.BLOCK;
-    }
-
-    private boolean canClick() {
-        if (!this.weaponsOnly.getValue()
-                || ItemUtil.hasRawUnbreakingEnchant()
-                || this.allowTools.getValue() && ItemUtil.isHoldingTool()) {
-            if (this.breakBlocks.getValue() && this.isBreakingBlock() && !this.hasValidTarget()) {
-                GameType gameType12 = mc.playerController.getCurrentGameType();
-                return gameType12 != GameType.SURVIVAL && gameType12 != GameType.CREATIVE;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    private boolean isValidTarget(EntityPlayer entityPlayer) {
-        if (entityPlayer != mc.thePlayer && entityPlayer != mc.thePlayer.ridingEntity) {
-            if (entityPlayer == mc.getRenderViewEntity() || entityPlayer == mc.getRenderViewEntity().ridingEntity) {
-                return false;
-            } else if (entityPlayer.deathTime > 0) {
-                return false;
-            } else {
-                float borderSize = entityPlayer.getCollisionBorderSize();
-                return RotationUtil.rayTrace(entityPlayer.getEntityBoundingBox().expand(
-                        borderSize + this.hitBoxHorizontal.getValue(),
-                        borderSize + this.hitBoxVertical.getValue(),
-                        borderSize + this.hitBoxHorizontal.getValue()
-                ), mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, this.range.getValue()) != null;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    private boolean hasValidTarget() {
-        return mc.theWorld
-                .loadedEntityList
-                .stream()
-                .filter(e -> e instanceof EntityPlayer)
-                .map(e -> (EntityPlayer) e)
-                .anyMatch(this::isValidTarget);
-    }
+    private int atkTickCd = 0;
 
     public AutoClicker() {
         super("AutoClicker", false);
-
-        minCPS.setCategory("Timing");
-        maxCPS.setCategory("Timing");
-        blockHit.setCategory("Combat");
-        blockHitTicks.setCategory("Timing");
-        weaponsOnly.setCategory("Conditions");
-        allowTools.setCategory("Conditions");
-        breakBlocks.setCategory("Conditions");
-        range.setCategory("Targeting");
-        hitBoxVertical.setCategory("Targeting");
-        hitBoxHorizontal.setCategory("Targeting");
     }
 
-    @EventTarget
+    private boolean canClick() {
+        if (mc.thePlayer == null || mc.theWorld == null) return false;
+        if (mc.currentScreen != null) return false;
+
+        if (!weaponsOnly.getValue()) {
+            // 非武器限定：直接允许点击（空手/任意物品均可连点）
+            if (!breakBlocks.getValue() && mc.objectMouseOver != null &&
+                    mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                return false;
+            }
+            return true;
+        }
+
+        // 武器限定模式：持剑（附魔判定）或允许工具时持工具
+        if (ItemUtil.hasRawUnbreakingEnchant() ||
+                (allowTools.getValue() && ItemUtil.isHoldingTool())) {
+            if (!breakBlocks.getValue() && mc.objectMouseOver != null &&
+                    mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private Entity getTarget() {
+        if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
+            return mc.objectMouseOver.entityHit;
+        }
+        KillAura ka = (KillAura) Elara.moduleManager.getModule(KillAura.class);
+        if (ka != null && ka.isEnabled() && ka.getTarget() != null) {
+            return ka.getTarget();
+        }
+        return null;
+    }
+
+    private boolean isValidTarget(Entity e) {
+        if (e == null || e == mc.thePlayer) return false;
+        if (!(e instanceof EntityLivingBase)) return false;
+        EntityLivingBase living = (EntityLivingBase) e;
+        return living.deathTime <= 0;
+    }
+
+    /**
+     * 根据 [minCPS, maxCPS] 范围随机生成下一次点击的 tick 间隔。
+     * 1.8.9 下 CPS = 20 / ticks（每秒20tick），带轻微随机抖动。
+     */
+    private int nextCdTicksFromCps() {
+        int min = Math.min(minCPS.getValue(), maxCPS.getValue());
+        int max = Math.max(minCPS.getValue(), maxCPS.getValue());
+        if (max < 1) max = 1;
+        if (min < 1) min = 1;
+        // 在 [min, max] 中随机一个 CPS 值，转成 ticks
+        float cps = RandomUtil.nextFloat((float) min, (float) max);
+        if (cps <= 0.1f) cps = 0.1f;
+        int ticks = (int) Math.round(20.0 / cps);
+        // 加入 ±1 tick 的额外抖动，避免节奏过于固定
+        ticks += RandomUtil.nextInt(-1, 2);
+        return Math.max(0, ticks);
+    }
+
+    @EventTarget(Priority.LOW)
     public void onTick(TickEvent event) {
-        if (event.getType() == EventType.PRE) {
-            if (this.clickDelay > 0L) {
-                this.clickDelay -= 50L;
-            }
-            if (this.blockHitDelay > 0L) {
-                this.blockHitDelay -= 50L;
-            }
-            if (mc.currentScreen != null) {
-                this.clickPending = false;
-                this.blockHitPending = false;
-            } else {
-                if (this.clickPending) {
-                    this.clickPending = false;
-                    KeyBindUtil.updateKeyState(mc.gameSettings.keyBindAttack.getKeyCode());
-                }
-                if (this.blockHitPending) {
-                    this.blockHitPending = false;
-                    KeyBindUtil.updateKeyState(mc.gameSettings.keyBindUseItem.getKeyCode());
-                }
-                if (this.isEnabled() && this.canClick() && mc.gameSettings.keyBindAttack.isKeyDown()) {
-                    if (!mc.thePlayer.isUsingItem()) {
-                        while (this.clickDelay <= 0L) {
-                            this.clickPending = true;
-                            this.clickDelay = this.clickDelay + this.getNextClickDelay();
-                            KeyBindUtil.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
-                            KeyBindUtil.pressKeyOnce(mc.gameSettings.keyBindAttack.getKeyCode());
-                        }
-                    }
-                    if (this.blockHit.getValue()
-                            && this.blockHitDelay <= 0L
-                            && mc.gameSettings.keyBindUseItem.isKeyDown()
-                            && ItemUtil.isHoldingSword()) {
-                        this.blockHitPending = true;
-                        KeyBindUtil.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-                        if (!mc.thePlayer.isUsingItem()) {
-                            this.blockHitDelay = this.blockHitDelay + this.getBlockHitDelay();
-                            KeyBindUtil.pressKeyOnce(mc.gameSettings.keyBindUseItem.getKeyCode());
-                        }
-                    }
-                }
+        if (!isEnabled() || event.getType() != EventType.PRE) return;
+        if (mc.thePlayer == null) return;
+
+        if (!canClick()) {
+            atkTickCd = 0;
+            return;
+        }
+
+        boolean keyDown = mc.gameSettings.keyBindAttack.isKeyDown();
+        if (!keyDown) {
+            atkTickCd = 0;
+            return;
+        }
+
+        if (mc.thePlayer.isUsingItem()) return;
+        if (mc.thePlayer.isBlocking()) return;
+
+        if (atkTickCd > 0) {
+            atkTickCd--;
+            return;
+        }
+
+        Entity target = getTarget();
+        boolean clicked = false;
+
+        if (target != null && isValidTarget(target)) {
+            mc.thePlayer.swingItem();
+            mc.playerController.attackEntity(mc.thePlayer, target);
+            clicked = true;
+        } else if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
+            Entity hit = mc.objectMouseOver.entityHit;
+            if (isValidTarget(hit)) {
+                mc.thePlayer.swingItem();
+                mc.playerController.attackEntity(mc.thePlayer, hit);
+                clicked = true;
             }
         }
+
+        if (!clicked) {
+            // 空点（无有效目标但左键按住）：同样 swing，保证连点手感
+            if (breakBlocks.getValue() && mc.objectMouseOver != null
+                    && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                // 打方块场景交给 mc 原生处理，不主动 swing（避免冲突）
+            } else {
+                mc.thePlayer.swingItem();
+            }
+        }
+
+        atkTickCd = nextCdTicksFromCps();
     }
 
-    @EventTarget(Priority.LOWEST)
-    public void onCLick(LeftClickMouseEvent event) {
-        if (this.isEnabled() && !event.isCancelled()) {
-            if (!this.clickPending) {
-                this.clickDelay = this.clickDelay + this.getNextClickDelay();
-            }
+    @EventTarget(Priority.HIGHEST)
+    public void onLeftClick(LeftClickMouseEvent event) {
+        if (isEnabled() && mc.gameSettings.keyBindAttack.isKeyDown()) {
+            event.setCancelled(true);
         }
     }
 
     @Override
     public void onEnabled() {
-        this.clickDelay = 0L;
-        this.blockHitDelay = 0L;
+        atkTickCd = 0;
+    }
+
+    @Override
+    public void onDisabled() {
+        atkTickCd = 0;
+        if (mc.thePlayer != null) {
+            KeyBindUtil.updateKeyState(mc.gameSettings.keyBindAttack.getKeyCode());
+        }
     }
 
     @Override
     public void verifyValue(String mode) {
-        if (this.minCPS.getName().equals(mode)) {
-            if (this.minCPS.getValue() > this.maxCPS.getValue()) {
-                this.maxCPS.setValue(this.minCPS.getValue());
-            }
-        } else {
-            if (this.maxCPS.getName().equals(mode) && this.minCPS.getValue() > this.maxCPS.getValue()) {
-                this.minCPS.setValue(this.maxCPS.getValue());
-            }
+        if (minCPS.getName().equals(mode) && minCPS.getValue() > maxCPS.getValue()) {
+            maxCPS.setValue(minCPS.getValue());
+        }
+        if (maxCPS.getName().equals(mode) && minCPS.getValue() > maxCPS.getValue()) {
+            minCPS.setValue(maxCPS.getValue());
         }
     }
 
     @Override
     public String[] getSuffix() {
-        return Objects.equals(this.minCPS.getValue(), this.maxCPS.getValue())
-                ? new String[]{this.minCPS.getValue().toString()}
-                : new String[]{String.format("%d-%d", this.minCPS.getValue(), this.maxCPS.getValue())};
+        return minCPS.getValue().equals(maxCPS.getValue()) ?
+                new String[]{minCPS.getValue().toString()} :
+                new String[]{String.format("%d-%d", minCPS.getValue(), maxCPS.getValue())};
     }
 }

@@ -15,6 +15,10 @@ public class RotationUtil {
         return target + MathHelper.wrapAngleTo180_float(angle - target);
     }
 
+    public static float normalizeAngle(float angle) {
+        return MathHelper.wrapAngleTo180_float(angle);
+    }
+
     public static float clampAngle(float angle, float maxAngle) {
         maxAngle = Math.max(0.0f, Math.min(180.0f, maxAngle));
         if (angle > maxAngle) {
@@ -62,6 +66,10 @@ public class RotationUtil {
 
     public static float[] getRotationsTo(double targetX, double targetY, double targetZ, float currentYaw, float currentPitch) {
         return RotationUtil.getRotations(targetX, targetY, targetZ, currentYaw, currentPitch, 180.0f, 0.0f);
+    }
+
+    public static float[] getRotationsTo(double targetX, double targetY, double targetZ, float currentYaw, float currentPitch, float maxAngle, float smoothFactor) {
+        return RotationUtil.getRotations(targetX, targetY, targetZ, currentYaw, currentPitch, maxAngle, smoothFactor);
     }
 
     public static float[] getRotations(double targetX, double targetY, double targetZ, float currentYaw, float currentPitch, float maxAngle, float smoothFactor) {

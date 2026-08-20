@@ -109,48 +109,98 @@ public class BedPlates extends Module {
         if (renderDataList.isEmpty()) return;
 
         GlStateManager.pushMatrix();
-        mc.entityRenderer.setupOverlayRendering();
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_TEXTURE_BIT
+                | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_CURRENT_BIT);
+        try {
+            mc.entityRenderer.setupOverlayRendering();
+            GlStateManager.disableDepth();
+            GlStateManager.enableBlend();
+            GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GlStateManager.disableLighting();
+            GlStateManager.alphaFunc(GL11.GL_GREATER, 0.003921569F);
+            GlStateManager.enableAlpha();
 
-        for (BedRenderData data : renderDataList) {
-            float dist = data.dist;
-            float scale = MathHelper.clamp_float(1.0f / (1.0f + dist * 0.08f) * 1.5f, 0.4f, 2.0f);
+            for (BedRenderData data : renderDataList) {
+                float dist = data.dist;
+                float scale = MathHelper.clamp_float(1.0f / (1.0f + dist * 0.08f) * 1.5f, 0.4f, 2.0f);
 
-            float cx = data.bgX + data.totalWidth / 2;
-            float cy = data.bgY + data.bgHeight / 2;
-
-            GlStateManager.pushMatrix();
-            GlStateManager.translate(cx, cy, 0);
-            GlStateManager.scale(scale, scale, 1);
-            GlStateManager.translate(-cx, -cy, 0);
-
-            Gui.drawRect((int) data.bgX, (int) data.bgY, (int) (data.bgX + data.totalWidth), (int) (data.bgY + data.bgHeight), new Color(0, 0, 0, 110).getRGB());
-
-            float itemX = data.bgX + 2;
-            float itemY = data.bgY + 2;
-
-            for (BlockEntry entry : data.blocks) {
-                ItemStack stack = new ItemStack(Item.getItemFromBlock(entry.block));
+                float cx = data.bgX + data.totalWidth / 2;
+                float cy = data.bgY + data.bgHeight / 2;
 
                 GlStateManager.pushMatrix();
-                RenderHelper.enableGUIStandardItemLighting();
+                GlStateManager.translate(cx, cy, 0);
+                GlStateManager.scale(scale, scale, 1);
+                GlStateManager.translate(-cx, -cy, 0);
 
-                GlStateManager.translate(itemX + 8, itemY + 8, 0);
-                GlStateManager.scale(1.0F, -1.0F, 1.0F);
-                GlStateManager.translate(-(itemX + 8), -(itemY + 8), 0);
+                // 用原生 Gui.drawRect 拼接 9-slice 斜角伪圆角 (切 2px)，避免立即模式状态污染
+                drawCardBg(data.bgX, data.bgY, data.totalWidth, data.bgHeight, new Color(0, 0, 0, 110).getRGB());
 
-                RenderUtil.renderItemInGUI(stack, (int) itemX, (int) itemY);
+                float itemX = data.bgX + 2;
+                float itemY = data.bgY + 2;
 
-                RenderHelper.disableStandardItemLighting();
+                for (BlockEntry entry : data.blocks) {
+                    ItemStack stack = new ItemStack(Item.getItemFromBlock(entry.block));
+
+                    GlStateManager.pushMatrix();
+                    RenderHelper.enableGUIStandardItemLighting();
+
+                    GlStateManager.translate(itemX + 8, itemY + 8, 0);
+                    GlStateManager.scale(1.0F, -1.0F, 1.0F);
+                    GlStateManager.translate(-(itemX + 8), -(itemY + 8), 0);
+
+                    RenderUtil.renderItemInGUI(stack, (int) itemX, (int) itemY);
+
+                    RenderHelper.disableStandardItemLighting();
+                    GlStateManager.popMatrix();
+
+                    // 方块数显示（大于 1 时才显示，避免视觉噪声）
+                    if (entry.count > 1 && mc.fontRendererObj != null) {
+                        String label = entry.count >= 64 ? "64+" : String.valueOf(entry.count);
+                        int labelW = mc.fontRendererObj.getStringWidth(label);
+                        int labelX = (int) (itemX + 16.0F - labelW - 1.0F);
+                        int labelY = (int) (itemY + 16.0F - 9.0F);
+                        GlStateManager.disableDepth();
+                        GlStateManager.pushMatrix();
+                        GlStateManager.translate(0.0F, 0.0F, 200.0F);
+                        mc.fontRendererObj.drawString(label, labelX + 1, labelY + 1, 0xFF000000);
+                        mc.fontRendererObj.drawString(label, labelX, labelY, 0xFFFFFFFF);
+                        GlStateManager.popMatrix();
+                        GlStateManager.enableDepth();
+                    }
+
+                    itemX += 18;
+                }
+
                 GlStateManager.popMatrix();
-
-                itemX += 18;
             }
-
+        } finally {
+            GL11.glPopAttrib();
             GlStateManager.popMatrix();
         }
-
-        GlStateManager.popMatrix();
         ((IAccessorEntityRenderer) mc.entityRenderer).callSetupCameraTransform(event.getPartialTicks(), 0);
+    }
+
+    /**
+     * 原生 Gui.drawRect 拼接的 9-slice 伪圆角卡片（切 2px 倒角）。
+     * 完全不使用 glBegin/glEnd 立即模式，避免与 setupOverlayRendering 的 Tessellator 状态冲突。
+     */
+    private static void drawCardBg(float x, float y, float w, float h, int color) {
+        final int c = 2; // 倒角像素
+        int xi = (int) Math.ceil(x);
+        int yi = (int) Math.ceil(y);
+        int wi = Math.max(1, (int) Math.floor(w));
+        int hi = Math.max(1, (int) Math.floor(h));
+
+        // 中心大矩形 (覆盖主体)
+        Gui.drawRect(xi, yi + c, xi + wi, yi + hi - c, color);
+        // 上中条（左倒角后）
+        Gui.drawRect(xi + c, yi, xi + wi - c, yi + c, color);
+        // 下中条
+        Gui.drawRect(xi + c, yi + hi - c, xi + wi - c, yi + hi, color);
+        // 左中条（已被中心覆盖 -> 中心缺上下c）这里实际只需补齐上下倒角缺口的两侧
+        // 左中条: y in (c, hi - c), x in (0, c) — 但中心已经覆盖 x(0,w) y(c,hi-c)，所以左上/右上/左下/右下用小方块
+        // 简单做法：四角用 1px 过渡（倒角视觉近似）— 只需要在中心 + 上中 + 下中 之外补 4 条小方，
+        // 由于四角是 2px 倒角，我们直接不画 2x2 角块即可，不需要额外矩形。
     }
 
     private List<BlockPos> findBedHeadsNearPlayer() {
@@ -248,10 +298,15 @@ public class BedPlates extends Module {
                     if (!isBlockAllowed(block)) continue;
 
                     Block displayBlock = block instanceof BlockStainedGlass ? Blocks.glass : block;
-                    if (blockMap.containsKey(displayBlock)) continue;
-
+                    BlockEntry existing = blockMap.get(displayBlock);
                     float hardness = block.getBlockHardness(mc.theWorld, pos);
-                    blockMap.put(displayBlock, new BlockEntry(displayBlock, hardness < 0 ? 100 : hardness));
+                    hardness = hardness < 0 ? 100 : hardness;
+                    if (existing == null) {
+                        blockMap.put(displayBlock, new BlockEntry(displayBlock, hardness, 1));
+                    } else {
+                        existing.count += 1;
+                        if (hardness > existing.hardness) existing.hardness = hardness;
+                    }
                 }
             }
         }
@@ -260,8 +315,9 @@ public class BedPlates extends Module {
 
     private static class BlockEntry {
         final Block block;
-        final float hardness;
-        BlockEntry(Block block, float hardness) { this.block = block; this.hardness = hardness; }
+        float hardness;
+        int count;
+        BlockEntry(Block block, float hardness, int count) { this.block = block; this.hardness = hardness; this.count = count; }
     }
 
     private static class BedRenderData {
