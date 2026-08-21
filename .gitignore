@@ -48,3 +48,8 @@ client.run.bat
 .trae/
 build_log.txt
 .trae-cn/
+
+# Launcher build artifacts
+Launcher/bin/
+Launcher/obj/
+Launcher/.nuget/

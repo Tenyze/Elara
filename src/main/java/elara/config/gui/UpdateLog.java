@@ -20,6 +20,16 @@ public class UpdateLog extends BasicOption {
 
     public UpdateLog() {
         super(null, null, "", "", "Update", "Changelog", 2);
+        this.entries.add(new VersionEntry("v6.3 Pre Release \"Odyssey\"", "2026-08-20",
+                "Fixed AimAssist targeting error (RotationUtil angle normalization)",
+                "Added ElaraLauncher: standalone WPF launcher with Java auto-detection",
+                "Version isolation support (per-version mods/saves/config)",
+                "Download mirror options: Official / Third-party / Mixed",
+                "Offline Sign-in window with custom avatar support",
+                "Music directory follows version isolation",
+                "Optimized scrollbar and ComboBox styles",
+                "Single-file self-contained exe build"
+        ));
         this.entries.add(new VersionEntry("v6.2x", "2026-08-20",
                 "Fixed Scaffold placement (blockCount initialization)",
                 "Improved AimAssist: chest targeting + smooth acceleration",

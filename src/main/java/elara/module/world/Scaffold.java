@@ -436,7 +436,7 @@ public class Scaffold extends Module {
                                         - (double) mc.thePlayer.getEyeHeight();
                                 double relZ = (double) blockData.blockPos().getZ() + dz - mc.thePlayer.posZ;
                                 float baseYaw = RotationUtil.wrapAngleDiff(this.yaw, event.getYaw());
-                                float[] rotations = RotationUtil.getRotationsTo(relX, relY, relZ, baseYaw, this.pitch);
+                                float[] rotations = RotationUtil.getRotationsToRelative(relX, relY, relZ, baseYaw, this.pitch);
                                 MovingObjectPosition mop = RotationUtil.rayTrace(
                                         rotations[0], rotations[1],
                                         mc.playerController.getBlockReachDistance(), 1.0F);
@@ -520,7 +520,7 @@ public class Scaffold extends Module {
                                 double dx = hitVec.xCoord - mc.thePlayer.posX;
                                 double dy = hitVec.yCoord - mc.thePlayer.posY - (double) mc.thePlayer.getEyeHeight();
                                 double dz = hitVec.zCoord - mc.thePlayer.posZ;
-                                float[] rotations = RotationUtil.getRotationsTo(dx, dy, dz, event.getYaw(), event.getPitch());
+                                float[] rotations = RotationUtil.getRotationsToRelative(dx, dy, dz, event.getYaw(), event.getPitch());
                                 if (!(Math.abs(rotations[0] - this.yaw) < 120.0F)
                                         || !(Math.abs(rotations[1] - this.pitch) < 60.0F)) {
                                     break;
